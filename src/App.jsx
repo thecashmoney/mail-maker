@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
 import './App.css'
 import { googleLogout, useGoogleLogin } from '@react-oauth/google'
+import Box from '@mui/material/Box';
+import TextField from '@mui/material/TextField';
 import axios from 'axios';
 function App() {
     const [ user, setUser ] = useState(null);
@@ -25,7 +25,6 @@ function App() {
     },
     onError: (error) => console.log('Login Failed:', error),
     });
-
     useEffect(
         () => {
             if (user) {
@@ -61,17 +60,43 @@ function App() {
                     <nav>
                     <div class="navitems">
                         <div class="left">
-                        <a href="/" class="home-link">logo</a>
+                            <a href="/" class="home-link">logo</a>
                         </div>
                         <div class="right">
-                        <p>{profile.email}</p>
-                        <img src={profile.picture} alt="user image" class="profile-pic" />
+                            <p class="rightitem">{profile.email}</p>
+                            <img src={profile.picture} alt="user image" class="profile-pic" />
                         </div>
                     </div>
                     </nav>
                     <h2>hi {profile.name.split(' ')[0].toLowerCase()} !!!!</h2>
                     <br />
                     <br />
+                    <Box
+                    component="form"
+                    sx={{ '& > :not(style)': { m: 1, width: '25ch' } }}
+                    noValidate
+                    autoComplete="off"
+                    >
+                        <TextField
+                        label="email"
+                        id="outlined"
+                        defaultValue="email"
+                        />
+                        <TextField
+                        label="subject"
+                        id="outlined"
+                        defaultValue="subject"
+                        />
+                        <TextField
+                        id="outlined-multiline-static"
+                        label="body"
+                        multiline
+                        rows={4}
+                        defaultValue="Default Value"
+                        />
+                    </Box>
+                    {/* <button onClick={email}>send !!!</button> */}
+                    <br /><br />
                     <button onClick={logOut}>Log out</button>
                 </div>
             ) : (

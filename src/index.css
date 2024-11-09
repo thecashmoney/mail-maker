@@ -27,7 +27,7 @@ body {
     display: flex;
     place-items: center;
     min-width: 320px;
-    min-height: 50vh;
+    min-height: 70vh;
 }
 
 h1 {
@@ -72,8 +72,22 @@ nav {
 .navitems {
     display: flex;
     justify-content: space-between;
-    align-items: center;
+    align-items:center;
     padding-left: 50px;
     padding-right: 50px;
-    padding-top: 25px;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    background-color: #616161;
+}
+.left {
+    align-items:left;
+}
+.right {
+    display: flex;
+    justify-content: space-between;
+    padding-left: 50px;
+    align-items: right;
+}
+.rightitem {
+    padding-right: 50px;
 }
