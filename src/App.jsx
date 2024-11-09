@@ -5,12 +5,26 @@ import './App.css'
 import { googleLogout, useGoogleLogin } from '@react-oauth/google'
 import axios from 'axios';
 function App() {
-  const [ user, setUser ] = useState([]);
-  const [ profile, setProfile ] = useState([]);
+  const [ user, setUser ] = useState(null);
+  const [ profile, setProfile ] = useState(null);
+  const [rememberMe, setRememberMe] = useState(false);
+
+  //check if saved user is present- if so, open tht user.
+  useEffect(() => {
+    const savedUser = JSON.parse(localStorage.getItem('user'));
+    if (savedUser) {
+      setUser(savedUser);
+    }
+  }, []);
 
   const login = useGoogleLogin({
-      onSuccess: (codeResponse) => setUser(codeResponse),
-      onError: (error) => console.log('Login Failed:', error)
+    onSuccess: (codeResponse) => { setUser(codeResponse);
+      // store user in localstorage if remember me box is checked
+      if (rememberMe) {
+        localStorage.setItem('user', JSON.stringify(codeResponse));
+      }
+    },
+    onError: (error) => console.log('Login Failed:', error),
   });
 
   useEffect(
@@ -23,9 +37,7 @@ function App() {
                           Accept: 'application/json'
                       }
                   })
-                  .then((res) => {
-                      setProfile(res.data);
-                  })
+                  .then((res) => {setProfile(res.data);})
                   .catch((err) => console.log(err));
           }
       },
@@ -36,16 +48,22 @@ function App() {
   const logOut = () => {
       googleLogout();
       setProfile(null);
+      setUser(null);
+      localStorage.removeItem('user');
+  };
+
+  const handleRememberMeChange = (e) => {
+    setRememberMe(e.target.checked);
   };
 
   return (
       <div>
           {profile ? (
               <div>
-                  <h2>hi {profile.name} !!!!</h2>
+                  <h2>hi {profile.name.split(' ')[0].toLowerCase()} !!!!</h2>
                   <br />
                   <br />
-                  <img src={profile.picture} alt="user image" />
+                  <div class="profile"><img src={profile.picture} alt="user image" /></div>
                   <h3>User Logged in</h3>
                   <p>your email: {profile.email}</p>
                   <br />
@@ -59,6 +77,19 @@ function App() {
                 <h3>give a template, and we'll mass send emails!</h3>
                 <br />
                 <button onClick={login}>sign in !!! (requires google account access) 🚀</button>
+                {/* remember me button */}
+
+                <br /><br /><br />
+                <div>
+                  <label>
+                    <input
+                      type="checkbox"
+                      checked={rememberMe}
+                      onChange={handleRememberMeChange}
+                    />
+                    Remember me !!!!
+                  </label>
+                </div>
               </div>
           )}
       </div>
