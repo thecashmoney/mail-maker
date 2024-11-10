@@ -93,6 +93,9 @@ function App() {
                             '& .MuiInput-underline:after': {
                                 borderBottomColor: '#B2BAC2',
                             },
+                            input: {
+                                color: 'white',
+                            },
                             '& .MuiOutlinedInput-root': {
                                 '& fieldset': {
                                     borderColor: '#E0E3E7',
@@ -118,6 +121,9 @@ function App() {
                             },
                             '& .MuiInput-underline:after': {
                                 borderBottomColor: '#B2BAC2',
+                            },
+                            input: {
+                                color: 'white',
                             },
                             '& .MuiOutlinedInput-root': {
                                 '& fieldset': {
@@ -153,6 +159,9 @@ function App() {
                             },
                             '& .MuiInput-underline:after': {
                                 borderBottomColor: '#B2BAC2',
+                            },
+                            input: {
+                                color: 'white',
                             },
                             '& .MuiOutlinedInput-root': {
                                 '& fieldset': {
