@@ -4,6 +4,7 @@ import { googleLogout, useGoogleLogin } from '@react-oauth/google'
 import Box from '@mui/material/Box';
 import TextField from '@mui/material/TextField';
 import axios from 'axios';
+import { createTheme, ThemeProvider, useTheme } from '@mui/material/styles';
 function App() {
     const [ user, setUser ] = useState(null);
     const [ profile, setProfile ] = useState(null);
@@ -55,6 +56,7 @@ function App() {
     const handleRememberMeChange = (e) => {
     setRememberMe(e.target.checked);
     };
+    
 
     return (
         <div>
@@ -74,7 +76,7 @@ function App() {
                     <h2>hi {profile.name.split(' ')[0].toLowerCase()} !!!!</h2>
                     <br />
                     <br />
-                    <Box
+                    <Box //for email, subject lines
                     component="form"
                     sx={{ '& > :not(style)': { m: 1, width: '25ch' } }}
                     noValidate
@@ -112,6 +114,7 @@ function App() {
                         <TextField
                         label="subject"
                         id="outlined"
+                        
                         sx={{
                             '& label': {
                                 color: '#A0AAB4',
@@ -139,7 +142,7 @@ function App() {
                         }}
                         />
                     </Box>
-                    <Box
+                    <Box  //for body
                     component="form"
                     sx={{ '& > :not(style)': { m: 1, width: '52ch' } }}
                     noValidate
@@ -160,9 +163,6 @@ function App() {
                             '& .MuiInput-underline:after': {
                                 borderBottomColor: '#B2BAC2',
                             },
-                            input: {
-                                color: 'white',
-                            },
                             '& .MuiOutlinedInput-root': {
                                 '& fieldset': {
                                     borderColor: '#E0E3E7',
@@ -172,6 +172,9 @@ function App() {
                                 },
                                 '&.Mui-focused fieldset': {
                                     borderColor: '#6F7E8C',
+                                },
+                                '& textarea': {
+                                    color: 'white', // Change text color inside the textarea
                                 },
                             },
                         }}
