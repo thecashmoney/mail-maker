@@ -80,19 +80,89 @@ function App() {
                         <TextField
                         label="email"
                         id="outlined"
-                        defaultValue="email"
+                        sx={{
+                            '& label': {
+                                color: '#A0AAB4',
+                            },
+                            '& label.Mui-focused': {
+                                color: '#A0AAB4',
+                            },
+                            '& .MuiInput-underline:after': {
+                                borderBottomColor: '#B2BAC2',
+                            },
+                            '& .MuiOutlinedInput-root': {
+                                '& fieldset': {
+                                    borderColor: '#E0E3E7',
+                                },
+                                '&:hover fieldset': {
+                                    borderColor: '#B2BAC2',
+                                },
+                                '&.Mui-focused fieldset': {
+                                    borderColor: '#6F7E8C',
+                                },
+                            },
+                        }}
                         />
                         <TextField
                         label="subject"
                         id="outlined"
-                        defaultValue="subject"
+                        sx={{
+                            '& label': {
+                                color: '#A0AAB4',
+                            },
+                            '& label.Mui-focused': {
+                                color: '#A0AAB4',
+                            },
+                            '& .MuiInput-underline:after': {
+                                borderBottomColor: '#B2BAC2',
+                            },
+                            '& .MuiOutlinedInput-root': {
+                                '& fieldset': {
+                                    borderColor: '#E0E3E7',
+                                },
+                                '&:hover fieldset': {
+                                    borderColor: '#B2BAC2',
+                                },
+                                '&.Mui-focused fieldset': {
+                                    borderColor: '#6F7E8C',
+                                },
+                            },
+                        }}
                         />
+                    </Box>
+                    <Box
+                    component="form"
+                    sx={{ '& > :not(style)': { m: 1, width: '52ch' } }}
+                    noValidate
+                    autoComplete="off"
+                    >
                         <TextField
                         id="outlined-multiline-static"
                         label="body"
                         multiline
                         rows={4}
-                        defaultValue="Default Value"
+                        sx={{
+                            '& label': {
+                                color: '#A0AAB4',
+                            },
+                            '& label.Mui-focused': {
+                                color: '#A0AAB4',
+                            },
+                            '& .MuiInput-underline:after': {
+                                borderBottomColor: '#B2BAC2',
+                            },
+                            '& .MuiOutlinedInput-root': {
+                                '& fieldset': {
+                                    borderColor: '#E0E3E7',
+                                },
+                                '&:hover fieldset': {
+                                    borderColor: '#B2BAC2',
+                                },
+                                '&.Mui-focused fieldset': {
+                                    borderColor: '#6F7E8C',
+                                },
+                            },
+                        }}
                         />
                     </Box>
                     {/* <button onClick={email}>send !!!</button> */}
