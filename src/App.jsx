@@ -49,6 +49,9 @@ function App() {
         localStorage.removeItem('user');
     };
 
+    // const email = () => {
+
+    // }
     const handleRememberMeChange = (e) => {
     setRememberMe(e.target.checked);
     };
@@ -176,8 +179,8 @@ function App() {
                 <h3>give a template, and we'll mass send emails!</h3>
                 <br />
                 <button onClick={login}>sign in !!! (requires google account access) 🚀</button>
-                {/* remember me button */}
 
+                {/* remember me button */}
                 <br /><br /><br />
                 <div>
                     <label>
