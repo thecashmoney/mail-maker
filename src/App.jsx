@@ -101,7 +101,7 @@ function App() {
                 </div>
             ) : (
                 <div>
-                <h2>email maker !!!!</h2>
+                <h2>mail maker !!!!</h2>
                 <br />
                 <h3>give a template, and we'll mass send emails!</h3>
                 <br />

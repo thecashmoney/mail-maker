@@ -1,1 +1,1 @@
-# email-maker
+# mail-maker
