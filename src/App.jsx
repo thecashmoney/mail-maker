@@ -4,11 +4,24 @@ import { googleLogout, useGoogleLogin } from '@react-oauth/google'
 import Box from '@mui/material/Box';
 import TextField from '@mui/material/TextField';
 import axios from 'axios';
-import { createTheme, ThemeProvider, useTheme } from '@mui/material/styles';
 function App() {
     const [ user, setUser ] = useState(null);
     const [ profile, setProfile ] = useState(null);
     const [rememberMe, setRememberMe] = useState(false);
+    
+    const [formValues, setFormValues] = useState({
+        name: '',
+        email: '',
+        body: ''
+    });
+    
+    const handleFormChange = (event) => {
+        const { name, value } = event.target;
+        setFormValues(prevValues => ({
+        ...prevValues,
+        [name]: value
+        }));
+    };
 
     //check if saved user is present- if so, open tht user.
     useEffect(() => {
@@ -49,10 +62,13 @@ function App() {
         setUser(null);
         localStorage.removeItem('user');
     };
+    const handleSubmit = (event) => {
+        event.preventDefault();
+        console.log('Form Submitted:', formValues);
+    };
+    const sendEmail = () => {
 
-    // const email = () => {
-
-    // }
+    }
     const handleRememberMeChange = (e) => {
     setRememberMe(e.target.checked);
     };
@@ -73,114 +89,123 @@ function App() {
                         </div>
                     </div>
                     </nav>
+                    <br /><br />
                     <h2>hi {profile.name.split(' ')[0].toLowerCase()} !!!!</h2>
                     <br />
+                    <h3>draft your email here !!</h3>
                     <br />
-                    <Box //for email, subject lines
-                    component="form"
-                    sx={{ '& > :not(style)': { m: 1, width: '25ch' } }}
-                    noValidate
-                    autoComplete="off"
-                    >
-                        <TextField
-                        label="email"
-                        id="outlined"
-                        sx={{
-                            '& label': {
-                                color: '#A0AAB4',
-                            },
-                            '& label.Mui-focused': {
-                                color: '#A0AAB4',
-                            },
-                            '& .MuiInput-underline:after': {
-                                borderBottomColor: '#B2BAC2',
-                            },
-                            input: {
-                                color: 'white',
-                            },
-                            '& .MuiOutlinedInput-root': {
-                                '& fieldset': {
-                                    borderColor: '#E0E3E7',
+                    <form onSubmit={handleSubmit}>
+                        <Box //for email, subject lines
+                        component="form"
+                        sx={{ '& > :not(style)': { m: 1, width: '25ch' } }}
+                        noValidate
+                        autoComplete="off"
+                        >
+                            <TextField
+                            label="email"
+                            id="outlined"
+                            value={formValues.email}
+                            onChange={handleFormChange}
+                            sx={{
+                                '& label': {
+                                    color: '#A0AAB4',
                                 },
-                                '&:hover fieldset': {
-                                    borderColor: '#B2BAC2',
+                                '& label.Mui-focused': {
+                                    color: '#A0AAB4',
                                 },
-                                '&.Mui-focused fieldset': {
-                                    borderColor: '#6F7E8C',
+                                '& .MuiInput-underline:after': {
+                                    borderBottomColor: '#B2BAC2',
                                 },
-                            },
-                        }}
-                        />
-                        <TextField
-                        label="subject"
-                        id="outlined"
-                        
-                        sx={{
-                            '& label': {
-                                color: '#A0AAB4',
-                            },
-                            '& label.Mui-focused': {
-                                color: '#A0AAB4',
-                            },
-                            '& .MuiInput-underline:after': {
-                                borderBottomColor: '#B2BAC2',
-                            },
-                            input: {
-                                color: 'white',
-                            },
-                            '& .MuiOutlinedInput-root': {
-                                '& fieldset': {
-                                    borderColor: '#E0E3E7',
+                                input: {
+                                    color: 'white',
                                 },
-                                '&:hover fieldset': {
-                                    borderColor: '#B2BAC2',
+                                '& .MuiOutlinedInput-root': {
+                                    '& fieldset': {
+                                        borderColor: '#E0E3E7',
+                                    },
+                                    '&:hover fieldset': {
+                                        borderColor: '#B2BAC2',
+                                    },
+                                    '&.Mui-focused fieldset': {
+                                        borderColor: '#6F7E8C',
+                                    },
                                 },
-                                '&.Mui-focused fieldset': {
-                                    borderColor: '#6F7E8C',
+                            }}
+                            />
+                            <TextField
+                            label="subject"
+                            id="outlined"
+                            value={formValues.subject}
+                            onChange={handleFormChange}
+                            sx={{
+                                '& label': {
+                                    color: '#A0AAB4',
                                 },
-                            },
-                        }}
-                        />
-                    </Box>
-                    <Box  //for body
-                    component="form"
-                    sx={{ '& > :not(style)': { m: 1, width: '52ch' } }}
-                    noValidate
-                    autoComplete="off"
-                    >
-                        <TextField
-                        id="outlined-multiline-static"
-                        label="body"
-                        multiline
-                        rows={4}
-                        sx={{
-                            '& label': {
-                                color: '#A0AAB4',
-                            },
-                            '& label.Mui-focused': {
-                                color: '#A0AAB4',
-                            },
-                            '& .MuiInput-underline:after': {
-                                borderBottomColor: '#B2BAC2',
-                            },
-                            '& .MuiOutlinedInput-root': {
-                                '& fieldset': {
-                                    borderColor: '#E0E3E7',
+                                '& label.Mui-focused': {
+                                    color: '#A0AAB4',
                                 },
-                                '&:hover fieldset': {
-                                    borderColor: '#B2BAC2',
+                                '& .MuiInput-underline:after': {
+                                    borderBottomColor: '#B2BAC2',
                                 },
-                                '&.Mui-focused fieldset': {
-                                    borderColor: '#6F7E8C',
+                                input: {
+                                    color: 'white',
                                 },
-                                '& textarea': {
-                                    color: 'white', // Change text color inside the textarea
+                                '& .MuiOutlinedInput-root': {
+                                    '& fieldset': {
+                                        borderColor: '#E0E3E7',
+                                    },
+                                    '&:hover fieldset': {
+                                        borderColor: '#B2BAC2',
+                                    },
+                                    '&.Mui-focused fieldset': {
+                                        borderColor: '#6F7E8C',
+                                    },
                                 },
-                            },
-                        }}
-                        />
-                    </Box>
-                    {/* <button onClick={email}>send !!!</button> */}
+                            }}
+                            />
+                        </Box>
+                        <Box  //for body
+                        component="form"
+                        sx={{ '& > :not(style)': { m: 1, width: '52ch' } }}
+                        noValidate
+                        autoComplete="off"
+                        >
+                            <TextField
+                            id="outlined-multiline-static"
+                            label="body"
+                            multiline
+                            rows={4}
+                            value={formValues.body}
+                            onChange={handleFormChange}
+                            sx={{
+                                '& label': {
+                                    color: '#A0AAB4',
+                                },
+                                '& label.Mui-focused': {
+                                    color: '#A0AAB4',
+                                },
+                                '& .MuiInput-underline:after': {
+                                    borderBottomColor: '#B2BAC2',
+                                },
+                                '& .MuiOutlinedInput-root': {
+                                    '& fieldset': {
+                                        borderColor: '#E0E3E7',
+                                    },
+                                    '&:hover fieldset': {
+                                        borderColor: '#B2BAC2',
+                                    },
+                                    '&.Mui-focused fieldset': {
+                                        borderColor: '#6F7E8C',
+                                    },
+                                    '& textarea': {
+                                        color: 'white', // Change text color inside the textarea
+                                    },
+                                },
+                            }}
+                            />
+                        </Box>
+                    </form>
+                    <button onClick={sendEmail}>send !!!</button>
                     <br /><br />
                     <button onClick={logOut}>Log out</button>
                 </div>
