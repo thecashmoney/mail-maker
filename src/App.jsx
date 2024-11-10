@@ -10,8 +10,8 @@ function App() {
     const [rememberMe, setRememberMe] = useState(false);
     
     const [formValues, setFormValues] = useState({
-        name: '',
         email: '',
+        subject: '',
         body: ''
     });
     
@@ -104,7 +104,7 @@ function App() {
                             <TextField
                             label="email"
                             id="outlined"
-                            value={formValues.email}
+                            //value={formValues.email}
                             onChange={handleFormChange}
                             sx={{
                                 '& label': {
@@ -135,7 +135,7 @@ function App() {
                             <TextField
                             label="subject"
                             id="outlined"
-                            value={formValues.subject}
+                            // value={formValues.subject}
                             onChange={handleFormChange}
                             sx={{
                                 '& label': {
@@ -175,7 +175,7 @@ function App() {
                             label="body"
                             multiline
                             rows={4}
-                            value={formValues.body}
+                            //value={formValues.body}
                             onChange={handleFormChange}
                             sx={{
                                 '& label': {
