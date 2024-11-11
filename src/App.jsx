@@ -23,6 +23,59 @@ function App() {
         }));
     };
 
+    //gapi quickstart
+    // TODO(developer): Set to client ID and API key from the Developer Console
+    const CLIENT_ID = '348073828150-3tm7tsfgg51bm266t902nomfliad9qmo.apps.googleusercontent.com';
+    const API_KEY = user.access_token;
+
+    // Discovery doc URL for APIs used by the quickstart
+    const DISCOVERY_DOC = 'https://www.googleapis.com/discovery/v1/apis/gmail/v1/rest';
+
+    // Authorization scopes required by the API; multiple scopes can be
+    // included, separated by spaces.
+    const SCOPES = 'https://www.googleapis.com/auth/gmail.send ';
+
+    let tokenClient;
+    let gapiInited = false;
+    let gisInited = false;
+
+    document.getElementById('authorize_button').style.visibility = 'hidden';
+    document.getElementById('signout_button').style.visibility = 'hidden';
+
+    /**
+     * Callback after api.js is loaded.
+     */
+    function gapiLoaded() {
+        gapi.load('client', initializeGapiClient);
+    }
+
+    /**
+     * Callback after the API client is loaded. Loads the
+     * discovery doc to initialize the API.
+     */
+    async function initializeGapiClient() {
+        await gapi.client.init({
+            apiKey: API_KEY,
+            discoveryDocs: [DISCOVERY_DOC],
+        });
+        gapiInited = true;
+        maybeEnableButtons();
+    }
+
+    /**
+     * Callback after Google Identity Services are loaded.
+     */
+    function gisLoaded() {
+        tokenClient = google.accounts.oauth2.initTokenClient({
+        client_id: CLIENT_ID,
+        scope: SCOPES,
+        callback: '', // defined later
+    });
+        gisInited = true;
+        maybeEnableButtons();
+    }
+
+
     //check if saved user is present- if so, open tht user.
     useEffect(() => {
     const savedUser = JSON.parse(localStorage.getItem('user'));
@@ -64,11 +117,37 @@ function App() {
     };
     const handleSubmit = (event) => {
         event.preventDefault();
-        console.log('Form Submitted:', formValues);
     };
-    const sendEmail = () => {
 
+    const sendEmail = () => {
+        const { email, subject, body } = formValues;
+        const message =
+        "From: " + profile.email + "\r\n" + 
+        "To: " + email + "\r\n" +
+        "Subject: " + subject + "\r\n\r\n" +
+        body;
+
+        console.log('Form Submitted:', formValues);
+
+        // The body needs to be base64url encoded.
+        const encodedMessage = btoa(message)
+
+        const reallyEncodedMessage = encodedMessage.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
+
+        gapi.client.gmail.users.messages.send({
+            userId: 'me',
+            resource: { // Modified
+                // same response with any of these
+                raw: reallyEncodedMessage
+                // raw: encodedMessage
+                // raw: message
+            }
+        }).then(function () { console.log("done!");
+        }).catch((error) => {
+            console.error('Error sending email:', error);
+        });
     }
+
     const handleRememberMeChange = (e) => {
     setRememberMe(e.target.checked);
     };
@@ -84,15 +163,13 @@ function App() {
                             <a href="/" class="home-link">logo</a>
                         </div>
                         <div class="right">
-                            <p class="rightitem">{profile.email}</p>
+                            <p class="rightitem">hi {profile.name.split(' ')[0].toLowerCase()} !!!! ({profile.email})</p>
                             <img src={profile.picture} alt="user image" class="profile-pic" />
                         </div>
                     </div>
                     </nav>
                     <br /><br />
-                    <h2>hi {profile.name.split(' ')[0].toLowerCase()} !!!!</h2>
-                    <br />
-                    <h3>draft your email here !!</h3>
+                    <h2>draft your email here !!</h2>
                     <br />
                     <form onSubmit={handleSubmit}>
                         <Box //for email, subject lines
@@ -102,9 +179,10 @@ function App() {
                         autoComplete="off"
                         >
                             <TextField
+                            name = "email"
                             label="email"
                             id="outlined"
-                            //value={formValues.email}
+                            value={formValues.email}
                             onChange={handleFormChange}
                             sx={{
                                 '& label': {
@@ -133,9 +211,10 @@ function App() {
                             }}
                             />
                             <TextField
+                            name = "subject"
                             label="subject"
                             id="outlined"
-                            // value={formValues.subject}
+                            value={formValues.subject}
                             onChange={handleFormChange}
                             sx={{
                                 '& label': {
@@ -171,6 +250,7 @@ function App() {
                         autoComplete="off"
                         >
                             <TextField
+                            name = "body"
                             id="outlined-multiline-static"
                             label="body"
                             multiline
