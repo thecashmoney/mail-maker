@@ -59,35 +59,16 @@ function SignedInHTML({ user }) {
         event.preventDefault();
     };
 
-    const sendEmail = () => {
+    const sendEmail = async () => {
         const { email, subject, body } = formValues;
-        const message =
-            "From: " + user.email + "\r\n" +
-            "To: " + email + "\r\n" +
-            "Subject: " + subject + "\r\n\r\n" +
-            body;
-
-        console.log('Form Submitted:', formValues);
-
-        // The body needs to be base64url encoded.
-        const encodedMessage = btoa(message)
-
-        const reallyEncodedMessage = encodedMessage.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
-
-        //     gapi.client.gmail.users.messages.send({
-        //         userId: 'me',
-        //         resource: { // Modified
-        //             // same response with any of these
-        //             raw: reallyEncodedMessage
-        //             // raw: encodedMessage
-        //             // raw: message
-        //         }
-        //     }).then(function () {
-        //         console.log("done!");
-        //     }).catch((error) => {
-        //         console.error('Error sending email:', error);
-        //     });
-    }
+        try {
+            const response = await fetch('https://helloworld-niisnxz5da-uc.a.run.app');
+            const data = await response.text();  // The function sends a string response
+            console.log(data);
+        } catch (error) {
+            console.error('Error calling Firebase function:', error);
+        }
+    };
 
     return <div>
         <nav>
@@ -111,7 +92,7 @@ function SignedInHTML({ user }) {
                 noValidate
                 autoComplete="off"
             >
-                <TextInput 
+                <TextInput
                     name="email"
                     label="email"
                     id="outlined"
@@ -119,11 +100,11 @@ function SignedInHTML({ user }) {
                     onChange={handleFormChange}
                 />
                 <TextInput
-                    name = "subject"
-                    label = "subject"
-                    id = "outlined"
-                    value = {formValues.subject}
-                    onChange = {handleFormChange}
+                    name="subject"
+                    label="subject"
+                    id="outlined"
+                    value={formValues.subject}
+                    onChange={handleFormChange}
                 />
 
             </Box>
@@ -143,7 +124,7 @@ function SignedInHTML({ user }) {
                 />
             </Box>
         </form>
-        {/* <button onClick={sendEmail}>send !!!</button> */}
+        <button onClick={sendEmail}>send !!!</button>
         <br /><br />
         <button onClick={() => signOut(auth)}>sign out !!</button>
     </div>
@@ -167,7 +148,7 @@ function SignedOutHTML() {
 export default App;
 
 
-function TextInput({name, label, id, value, onChange, multiline=false, rows=4}) {
+function TextInput({ name, label, id, value, onChange, multiline = false, rows = 4 }) {
     return (
         <TextField
             name={name}
@@ -175,8 +156,8 @@ function TextInput({name, label, id, value, onChange, multiline=false, rows=4}) 
             id={id}
             value={value}
             onChange={onChange}
-            multiline = {multiline}
-            rows = {rows}
+            multiline={multiline}
+            rows={rows}
             sx={{
                 '& label': {
                     color: '#A0AAB4',
@@ -206,5 +187,15 @@ function TextInput({name, label, id, value, onChange, multiline=false, rows=4}) 
                 },
             }}
         />
+    );
+}
+
+export function Functions() {
+    const app = useFirebaseApp();
+
+    return (
+        <FunctionsProvider sdk={getFunctions(app)}>
+            <UpperCaser />
+        </FunctionsProvider>
     );
 }
