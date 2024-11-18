@@ -8,7 +8,6 @@
  */
 
 const functions = require("firebase-functions");
-// const logger = require("firebase-functions/logger");
 const cors = require("cors")({origin: true});
 
 // Create and deploy your first functions
@@ -22,36 +21,28 @@ exports.helloWorld = functions.https.onRequest((request, response) => {
 });
 
 exports.sendEmail = functions.https.onRequest((request, response) => {
-  from = "";
-  to = "";
-  subject = "";
-  body = "";
   cors(request, response, () => {
-    from = request.query.from;
-    to = request.query.to;
-    subject = request.query.subject;
-    body = request.query.body;
     const message =
-      "From: " + from + "\r\n" +
-      "To: " + to + "\r\n" +
-      "Subject: " + subject + "\r\n\r\n" +
-      body;
+      "From: " + request.query.from + "\r\n" +
+      "To: " + request.query.to + "\r\n" +
+      "Subject: " + request.query.subject + "\r\n\r\n" +
+      request.query.body;
 
     // The body needs to be base64url encoded.
     const encodedMessage = btoa(message);
 
-    const reallyEncodedMessage = encodedMessage.replace(/\+/g, '-').
-        replace(/\//g, '_').replace(/=+$/, '');
+    const reallyEncodedMessage = encodedMessage.replace(/\+/g, "-").
+        replace(/\//g, "_").replace(/=+$/, "");
 
     gapi.client.gmail.users.messages.send({
-      userId: 'me',
+      userId: "me",
       resource: { // Modified
         // same response with any of these
-        raw: reallyEncodedMessage
+        raw: reallyEncodedMessage,
         // raw: encodedMessage
         // raw: message
-      }
-    }).then(function () {
+      },
+    }).then(() => {
       response.send("sent!");
     }).catch((error) => {
       response.error("Error sending email:", error);
