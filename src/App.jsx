@@ -61,10 +61,34 @@ function SignedInHTML({ user }) {
 
     const sendEmail = async () => {
         const { email, subject, body } = formValues;
+        const message =
+            "From: " + user.email + "\r\n" +
+            "To: " + formValues.email + "\r\n" +
+            "Subject: " + formValues.subject + "\r\n\r\n" +
+            formValues.body;
         try {
-            const response = await fetch('https://helloworld-niisnxz5da-uc.a.run.app');
-            const data = await response.text();  // The function sends a string response
-            console.log(data);
+            //make payload
+            const payload = {
+                body: message,
+            };
+    
+            // Send the HTTP request to your Firebase function
+            const response = await fetch('https://sendemail-niisnxz5da-uc.a.run.app', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(payload),
+            });
+    
+            // Handle the response
+            if (response.ok) {
+                const result = await response.json();
+                console.log('Email sent:', result);
+            } else {
+                const error = await response.text();
+                console.error('Error sending email:', error);
+            }
         } catch (error) {
             console.error('Error calling Firebase function:', error);
         }
