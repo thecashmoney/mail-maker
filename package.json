@@ -17,12 +17,15 @@
     "@fontsource/roboto": "^5.1.0",
     "@mui/material": "^6.1.6",
     "@react-oauth/google": "^0.12.1",
-    "axios": "^1.7.7",
+    "axios": "^1.7.9",
+    "express": "^4.21.2",
+    "express-session": "^1.18.1",
     "firebase": "^9.23.0",
     "googleapis": "^144.0.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "reactfire": "^4.2.3"
+    "reactfire": "^4.2.3",
+    "session": "^0.1.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.13.0",

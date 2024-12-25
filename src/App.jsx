@@ -11,6 +11,7 @@ import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 const signOut = auth => auth.signOut().then(() => console.log('signed out'));
 const signIn = async auth => {
     const provider = new GoogleAuthProvider();
+    provider.addScope('https://www.googleapis.com/auth/gmail.send');
     await signInWithPopup(auth, provider);
 }
 
@@ -39,7 +40,7 @@ function App() {
     )
 }
 
-function SignedInHTML({ user }) {
+function SignedInHTML({ user }, { credential }) {
     const auth = useAuth();
     const [formValues, setFormValues] = useState({
         email: '',
@@ -62,26 +63,28 @@ function SignedInHTML({ user }) {
     const sendEmail = async () => {
         const { email, subject, body } = formValues;
         const message =
-            "From: " + user.email + "\r\n" +
+            "From: " + user.email + "\r\n" + 
             "To: " + formValues.email + "\r\n" +
             "Subject: " + formValues.subject + "\r\n\r\n" +
+            "Content-Type: text/plain; charset=UTF-8\r\n\r\n" + 
             formValues.body;
+        const code = user.stsTokenManager.getToken();
+        console.log(code);
         try {
             //make payload
             const payload = {
+                code: code,
                 body: message,
             };
-    
-            // Send the HTTP request to your Firebase function
-            const response = await fetch('https://sendemail-niisnxz5da-uc.a.run.app', {
+            // const response = await fetch('https://sendemail-niisnxz5da-uc.a.run.app', {
+            const response = await fetch('http://127.0.0.1:5001/mail-maker-1b4d9/us-central1/sendEmail', {   //for debug on local side
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
+                    'Content-Type': 'application/json'
                 },
                 body: JSON.stringify(payload),
             });
     
-            // Handle the response
             if (response.ok) {
                 const result = await response.json();
                 console.log('Email sent:', result);
