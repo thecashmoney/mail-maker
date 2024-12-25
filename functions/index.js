@@ -11,17 +11,17 @@
 const {google} = require("googleapis");
 
 // google auth
-const fs = require("fs").promises;
-const path = require("path");
-const process = require("process");
+// const fs = require("fs").promises;
+// const path = require("path");
+// const process = require("process");
 // const {authenticate} = require("@google-cloud/local-auth");
 // const SCOPES = ["https://www.googleapis.com/auth/gmail.send", "https://www.googleapis.com/auth/userinfo.profile"];
-const TOKEN_PATH = path.join(process.cwd(), "token.json");
-const CREDENTIALS_PATH = path.join(process.cwd(), "credentials.json");
+// const TOKEN_PATH = path.join(process.cwd(), "token.json");
+// const CREDENTIALS_PATH = path.join(process.cwd(), "credentials.json");
 
 // for interacting with requests
 const {onRequest} = require("firebase-functions/v2/https");
-const axios = require("axios");
+// const axios = require("axios");
 
 
 // Create and deploy your first functions
@@ -95,14 +95,14 @@ const axios = require("axios");
 exports.sendEmail = onRequest( {cors: true},
     async (req, res) => {
       const message = req.body.body;
-      const code = req.body.code;
+      const token = req.body.code;
       const encodedMessage = Buffer.from(message).toString("base64");
       const reallyEncodedMessage = encodedMessage.replace(/\+/g, "-").
           replace(/\//g, "_").replace(/=+$/, "");
 
-      await receiveToken(code);
+      // await receiveToken(code);
 
-      const token = await fs.readFile(TOKEN_PATH);
+      // const token = await fs.readFile(TOKEN_PATH);
       try {
         await sendMail(token, reallyEncodedMessage);
       } catch (error) {
@@ -129,19 +129,19 @@ async function sendMail(token, reallyEncodedMessage) {
   });
 }
 
-async function receiveToken(code) {
-  const content = await fs.readFile(CREDENTIALS_PATH);
-  const keys = JSON.parse(content);
-  const key = keys.installed || keys.web;
+// async function receiveToken(code) {
+//   const content = await fs.readFile(CREDENTIALS_PATH);
+//   const keys = JSON.parse(content);
+//   const key = keys.installed || keys.web;
 
-  const payload = {
-    "grant_type": "authorization_code",
-    "code": code,
-    "client_id": key.client_id,
-    "client_secret": key.client_secret,
-    "redirect_uri": "localhost:5173/mail-maker",
-  };
+//   const payload = {
+//     "grant_type": "authorization_code",
+//     "code": code,
+//     "client_id": key.client_id,
+//     "client_secret": key.client_secret,
+//     "redirect_uri": "localhost:5173/mail-maker",
+//   };
 
-  const res = await axios.post("https://oauth2.googleapis.com/token", payload);
-  await fs.writeFile(TOKEN_PATH, res.data);
-}
+//   const res = await axios.post("https://oauth2.googleapis.com/token", payload);
+//   await fs.writeFile(TOKEN_PATH, res.data);
+// }

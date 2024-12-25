@@ -7,12 +7,16 @@ import { useAuth, useSigninCheck, FirebaseAppProvider, FirestoreProvider, useFir
 import { getAuth } from 'firebase/auth';
 import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 
-
+var token;
 const signOut = auth => auth.signOut().then(() => console.log('signed out'));
 const signIn = async auth => {
     const provider = new GoogleAuthProvider();
     provider.addScope('https://www.googleapis.com/auth/gmail.send');
-    await signInWithPopup(auth, provider);
+    signInWithPopup(auth, provider).then((result) => {
+        const credential = GoogleAuthProvider.credentialFromResult(result);
+        token = credential.accessToken;
+        Object.freeze(token);
+    });
 }
 
 
@@ -25,8 +29,7 @@ function Auth() {
 
     const { signedIn, user } = signinResult;
     if (signedIn) {
-        console.log(user);
-        return (<SignedInHTML user={user} />);
+        return (<SignedInHTML user={user} token={token}/>);
     } else return (<SignedOutHTML />);
 }
 
@@ -40,7 +43,7 @@ function App() {
     )
 }
 
-function SignedInHTML({ user }, { credential }) {
+function SignedInHTML({ user, token }) {
     const auth = useAuth();
     const [formValues, setFormValues] = useState({
         email: '',
@@ -61,15 +64,13 @@ function SignedInHTML({ user }, { credential }) {
     };
 
     const sendEmail = async () => {
+        const code = token;
         const { email, subject, body } = formValues;
         const message =
             "From: " + user.email + "\r\n" + 
             "To: " + formValues.email + "\r\n" +
             "Subject: " + formValues.subject + "\r\n\r\n" +
-            "Content-Type: text/plain; charset=UTF-8\r\n\r\n" + 
             formValues.body;
-        const code = user.stsTokenManager.getToken();
-        console.log(code);
         try {
             //make payload
             const payload = {
@@ -86,10 +87,10 @@ function SignedInHTML({ user }, { credential }) {
             });
     
             if (response.ok) {
-                const result = await response.json();
+                const result = await response;
                 console.log('Email sent:', result);
             } else {
-                const error = await response.text();
+                const error = await response;
                 console.error('Error sending email:', error);
             }
         } catch (error) {
