@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react'
 import './App.css'
 import Box from '@mui/material/Box';
 import TextField from '@mui/material/TextField';
-import { Checkbox, FormControlLabel } from '@mui/material';
+import { Checkbox, FormControlLabel, FormGroup } from '@mui/material';
 import { useAuth, useSigninCheck, FirebaseAppProvider, FirestoreProvider, useFirestoreDocData, useFirestore, useFirebaseApp, AuthProvider } from 'reactfire';
 import { getAuth } from 'firebase/auth';
 import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
@@ -49,7 +49,8 @@ function SignedInHTML({ user, token }) {
     const [formValues, setFormValues] = useState({
         email: '',
         subject: '',
-        body: ''
+        body: '',
+        range: ''
     });
 
 
@@ -58,7 +59,7 @@ function SignedInHTML({ user, token }) {
     // Handle checkbox change
     const handleSheetChange = (event) => {
         // Update the state based on whether the checkbox is checked or not
-        setSheet(event.target.sheet);
+        setSheet(event.target.checked);
     };
 
 
@@ -75,11 +76,69 @@ function SignedInHTML({ user, token }) {
     };
 
     const [buttonText, setButtonText] = useState('send !!!');
+
+    async function getSheet() {
+        try {
+            //look for spreadsheet id
+            const regex = /https:\/\/docs\.google\.com\/spreadsheets\/d\/([a-zA-Z0-9_-]+)/;
+            const match = formValues.email.match(regex);
+            console.log("Spreadsheet ID: ", match[1]);
+
+            //receive apikey for calling
+            let key;
+            const idToken = await user.getIdToken(/* forceRefresh */ true);
+            // const keyRaw = await fetch ('http://127.0.0.1:5001/mail-maker-1b4d9/us-central1/getSheetsKey', { //local
+            const keyRaw = await fetch ('https://us-central1-mail-maker-1b4d9.cloudfunctions.net/getSheetsKey', { //deployed
+                method: 'GET',
+                headers: {
+                    'Authorization': idToken,
+                }
+            });
+            if (keyRaw.ok) console.log("Authorized!");
+            else console.error("Unauthorized");
+
+            key = await keyRaw.text();
+            Object.freeze(key);
+
+
+            //receive spreadsheet data
+            const response = await fetch('https://sheets.googleapis.com/v4/spreadsheets/' + match[1] + '/values/'+ formValues.range +'?key='+ key, {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json',
+                }
+            });
+            const data = await response.json();
+            const emails = data.values;
+            let emailString;
+            for (let i = 0; i < emails.length; i++) {
+                for (let j = 0; j < emails[i].length; j++) {
+                    if (i == 0 && j == 0) emailString = emails[0][0] + ", ";
+                    else emailString = emailString + emails[i][j] + ", ";
+                }
+            }
+            console.log("Sending to: ", emailString);
+            return emailString;
+        }
+        catch {
+            console.error("Error calling gapi:");
+            return "";
+        }
+    }
+
     const sendEmail = async () => {
         const { email, subject, body } = formValues;
+        console.log("Sheet: ", sheet);
+        let toEmail;
+        if (!sheet) {
+            toEmail = formValues.email;
+        }
+        else {
+            toEmail = await getSheet();
+        }
         const message =
             "From: " + user.email + "\r\n" + 
-            "To: " + formValues.email + "\r\n" +
+            "To: " + toEmail + "\r\n" +
             "Subject: " + formValues.subject + "\r\n\r\n" +
             formValues.body;
         try {
@@ -88,8 +147,9 @@ function SignedInHTML({ user, token }) {
                 token: token,
                 body: message,
             };
-            // const response = await fetch('https://sendemail-niisnxz5da-uc.a.run.app', { //for deployed app
-            const response = await fetch('http://127.0.0.1:5001/mail-maker-1b4d9/us-central1/sendEmail', {   //for debug on local side
+            const response = await fetch('https://sendemail-niisnxz5da-uc.a.run.app', { //for deployed app
+
+            // const response = await fetch('http://127.0.0.1:5001/mail-maker-1b4d9/us-central1/sendEmail', {   //for debug on local side
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -126,20 +186,46 @@ function SignedInHTML({ user, token }) {
         <h2>draft your email here !!</h2>
         <br />
         <p>1. Add your recipients or link a public google email sheet below!</p>
-        <TextInput
-            name="email"
-            label="email"
-            id="outlined"
-            value={formValues.email}
-            onChange={handleFormChange}
-        />
-        <Checkbox
-            checked={sheet}  // Bind checkbox state
-            onChange={handleSheetChange}  // Handle state change
-            name="Using sheet?"
-            color="primary"
-        />
-        <br />
+        <Box //for email, subject lines
+                component="form"
+                sx={{ display: 'flex', flexDirection: 'row', '& > :not(style)': { m: 1, width: '25ch' }, alignItems: 'center',  justifyContent: 'space-between' }}
+                noValidate
+                autoComplete="off"
+            >
+                <TextInput
+                    name="email"
+                    label="email"
+                    id="outlined"
+                    value={formValues.email}
+                    onChange={handleFormChange}
+                />
+                <FormGroup>
+                    <FormControlLabel control={
+                        <Checkbox 
+                            onChange={handleSheetChange}
+                            sx={{color: '#A0AAB4', '& .MuiCheckbox-root': {borderColor: 'white'}}}
+                        />} 
+                        label="Google Sheet" 
+                        sx = {{display: 'flex', justifyContent: 'center',}}
+                    />
+                </FormGroup>
+            </Box>
+        {sheet && (
+            <Box  //for body
+            component="form"
+            sx={{ '& > :not(style)': { m: 1, width: '52ch' } }}
+            noValidate
+            autoComplete="off"
+            >
+                <TextInput
+                    name="range"
+                    label="Range (e.g. A1:A2)"
+                    id="outlined"
+                    value={formValues.range}
+                    onChange={handleFormChange}
+                />
+            </Box>
+        )}
         <form onSubmit={handleSubmit}>
             <Box //for email, subject lines
                 component="form"

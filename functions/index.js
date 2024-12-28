@@ -21,7 +21,6 @@ const {google} = require("googleapis");
 
 // for interacting with requests
 const {onRequest} = require("firebase-functions/v2/https");
-// const axios = require("axios");
 
 
 // Create and deploy your first functions
@@ -35,62 +34,6 @@ const {onRequest} = require("firebase-functions/v2/https");
 //     response.send("Hello from Firebase!");
 //   });
 // });
-
-// // --------------------------------------------------------------------AUTH
-// /**
-//  * Reads previously authorized credentials from the save file.
-//  *
-//  * @return {Promise<OAuth2Client|null>}
-//  */
-// async function loadSavedCredentialsIfExist() {
-//   try {
-//     const content = await fs.readFile(TOKEN_PATH);
-//     const credentials = JSON.parse(content);
-//     return google.auth.fromJSON(credentials);
-//   } catch (err) {
-//     return null;
-//   }
-// }
-
-// /**
-//  * Serializes credentials to a file compatible with GoogleAuth.fromJSON.
-//  *
-//  * @param {OAuth2Client} client
-//  * @return {Promise<void>}
-//  */
-// async function saveCredentials(client) {
-//   const content = await fs.readFile(CREDENTIALS_PATH);
-//   const keys = JSON.parse(content);
-//   const key = keys.installed || keys.web;
-//   const payload = JSON.stringify({
-//     type: "authorized_user",
-//     client_id: key.client_id,
-//     client_secret: key.client_secret,
-//     refresh_token: client.credentials.refresh_token,
-//   });
-//   await fs.writeFile(TOKEN_PATH, payload);
-// }
-
-// /**
-//  * Load or request or authorization to call APIs.
-//  *
-//  */
-// async function authorize() {
-//   let client = await loadSavedCredentialsIfExist();
-//   if (client) {
-//     return client;
-//   }
-//   client = await authenticate({
-//     scopes: SCOPES,
-//     keyfilePath: CREDENTIALS_PATH,
-//   });
-//   if (client.credentials) {
-//     await saveCredentials(client);
-//   }
-//   return client;
-// }
-// // ------------------------------------------ END AUTH
-
 
 exports.sendEmail = onRequest( {cors: true},
     async (req, res) => {
@@ -129,19 +72,29 @@ async function sendMail(token, reallyEncodedMessage) {
   });
 }
 
-// async function receiveToken(code) {
-//   const content = await fs.readFile(CREDENTIALS_PATH);
-//   const keys = JSON.parse(content);
-//   const key = keys.installed || keys.web;
+const admin = require("firebase-admin");
+admin.initializeApp();
 
-//   const payload = {
-//     "grant_type": "authorization_code",
-//     "code": code,
-//     "client_id": key.client_id,
-//     "client_secret": key.client_secret,
-//     "redirect_uri": "localhost:5173/mail-maker",
-//   };
+exports.getSheetsKey = onRequest( {cors: true},
+    async (req, res) => {
+      // SAVED AS API KEY 2 ON CLOUD CONSOLE: https://console.cloud.google.com/apis/credentials/key/43b0fe02-9493-4ea7-9255-0863fdef29b4?authuser=0&inv=1&invt=AblS7w&project=mail-maker-1b4d9
 
-//   const res = await axios.post("https://oauth2.googleapis.com/token", payload);
-//   await fs.writeFile(TOKEN_PATH, res.data);
-// }
+      const idToken = req.get("Authorization"); // Get token from Bearer
+
+      if (!idToken) {
+        return res.status(401).send("Unauthorized");
+      }
+
+      try {
+        // Verify the Firebase ID token
+        await admin.auth().verifyIdToken(idToken);
+
+        // If token is valid, proceed to return the key
+        const key = "AIzaSyD-8UDde4DWQLVb_6ABwvio8a4xxAJ6iLM";
+        res.status(200).send(key);
+      } catch (error) {
+        res.status(401).send("Unauthorized");
+      }
+    },
+);
+
