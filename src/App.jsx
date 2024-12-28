@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 import './App.css'
 import Box from '@mui/material/Box';
 import TextField from '@mui/material/TextField';
+import { Checkbox, FormControlLabel } from '@mui/material';
 import { useAuth, useSigninCheck, FirebaseAppProvider, FirestoreProvider, useFirestoreDocData, useFirestore, useFirebaseApp, AuthProvider } from 'reactfire';
 import { getAuth } from 'firebase/auth';
 import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
@@ -51,6 +52,16 @@ function SignedInHTML({ user, token }) {
         body: ''
     });
 
+
+    const [sheet, setSheet] = useState(false);
+
+    // Handle checkbox change
+    const handleSheetChange = (event) => {
+        // Update the state based on whether the checkbox is checked or not
+        setSheet(event.target.sheet);
+    };
+
+
     const handleFormChange = (event) => {
         const { name, value } = event.target;
         setFormValues(prevValues => ({
@@ -63,8 +74,8 @@ function SignedInHTML({ user, token }) {
         event.preventDefault();
     };
 
+    const [buttonText, setButtonText] = useState('send !!!');
     const sendEmail = async () => {
-        const code = token;
         const { email, subject, body } = formValues;
         const message =
             "From: " + user.email + "\r\n" + 
@@ -74,10 +85,10 @@ function SignedInHTML({ user, token }) {
         try {
             //make payload
             const payload = {
-                code: code,
+                token: token,
                 body: message,
             };
-            // const response = await fetch('https://sendemail-niisnxz5da-uc.a.run.app', {
+            // const response = await fetch('https://sendemail-niisnxz5da-uc.a.run.app', { //for deployed app
             const response = await fetch('http://127.0.0.1:5001/mail-maker-1b4d9/us-central1/sendEmail', {   //for debug on local side
                 method: 'POST',
                 headers: {
@@ -89,6 +100,7 @@ function SignedInHTML({ user, token }) {
             if (response.ok) {
                 const result = await response;
                 console.log('Email sent:', result);
+                setButtonText('sent !!');
             } else {
                 const error = await response;
                 console.error('Error sending email:', error);
@@ -113,6 +125,21 @@ function SignedInHTML({ user, token }) {
         <br /><br />
         <h2>draft your email here !!</h2>
         <br />
+        <p>1. Add your recipients or link a public google email sheet below!</p>
+        <TextInput
+            name="email"
+            label="email"
+            id="outlined"
+            value={formValues.email}
+            onChange={handleFormChange}
+        />
+        <Checkbox
+            checked={sheet}  // Bind checkbox state
+            onChange={handleSheetChange}  // Handle state change
+            name="Using sheet?"
+            color="primary"
+        />
+        <br />
         <form onSubmit={handleSubmit}>
             <Box //for email, subject lines
                 component="form"
@@ -120,13 +147,6 @@ function SignedInHTML({ user, token }) {
                 noValidate
                 autoComplete="off"
             >
-                <TextInput
-                    name="email"
-                    label="email"
-                    id="outlined"
-                    value={formValues.email}
-                    onChange={handleFormChange}
-                />
                 <TextInput
                     name="subject"
                     label="subject"
@@ -152,7 +172,7 @@ function SignedInHTML({ user, token }) {
                 />
             </Box>
         </form>
-        <button onClick={sendEmail}>send !!!</button>
+        <button onClick={sendEmail}>{buttonText}</button>
         <br /><br />
         <button onClick={() => signOut(auth)}>sign out !!</button>
     </div>

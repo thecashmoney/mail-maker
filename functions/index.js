@@ -95,7 +95,7 @@ const {onRequest} = require("firebase-functions/v2/https");
 exports.sendEmail = onRequest( {cors: true},
     async (req, res) => {
       const message = req.body.body;
-      const token = req.body.code;
+      const token = req.body.token;
       const encodedMessage = Buffer.from(message).toString("base64");
       const reallyEncodedMessage = encodedMessage.replace(/\+/g, "-").
           replace(/\//g, "_").replace(/=+$/, "");
@@ -108,7 +108,7 @@ exports.sendEmail = onRequest( {cors: true},
       } catch (error) {
         return res.status(500).send("Failed to send email: " + error.message);
       }
-      return res.status(200).send("sent successfully");
+      return res.status(200).send("called successfully");
     });
 
 async function sendMail(token, reallyEncodedMessage) {
