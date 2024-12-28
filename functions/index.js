@@ -77,8 +77,6 @@ admin.initializeApp();
 
 exports.getSheetsKey = onRequest( {cors: true},
     async (req, res) => {
-      // SAVED AS API KEY 2 ON CLOUD CONSOLE: https://console.cloud.google.com/apis/credentials/key/43b0fe02-9493-4ea7-9255-0863fdef29b4?authuser=0&inv=1&invt=AblS7w&project=mail-maker-1b4d9
-
       const idToken = req.get("Authorization"); // Get token from Bearer
 
       if (!idToken) {
