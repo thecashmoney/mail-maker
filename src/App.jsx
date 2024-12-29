@@ -2,6 +2,8 @@
 import { useState, useEffect } from 'react'
 import './App.css'
 import Box from '@mui/material/Box';
+import ToggleButton from '@mui/material/ToggleButton';
+import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
 import TextField from '@mui/material/TextField';
 import { Checkbox, FormControlLabel, FormGroup } from '@mui/material';
 import { useAuth, useSigninCheck, FirebaseAppProvider, FirestoreProvider, useFirestoreDocData, useFirestore, useFirebaseApp, AuthProvider } from 'reactfire';
@@ -50,11 +52,13 @@ function SignedInHTML({ user, token }) {
         email: '',
         subject: '',
         body: '',
-        range: ''
+        range: '',
+        templateLink: '',
     });
 
 
     const [sheet, setSheet] = useState(false);
+    const [templateStatus, setTemplate] = useState('template');
 
     // Handle checkbox change
     const handleSheetChange = (event) => {
@@ -62,6 +66,9 @@ function SignedInHTML({ user, token }) {
         setSheet(event.target.checked);
     };
 
+    const handleTemplateChange = (event, newTemplateStatus) => {
+        setTemplate(newTemplateStatus);
+    }
 
     const handleFormChange = (event) => {
         const { name, value } = event.target;
@@ -226,38 +233,76 @@ function SignedInHTML({ user, token }) {
                 />
             </Box>
         )}
-        <form onSubmit={handleSubmit}>
-            <Box //for email, subject lines
-                component="form"
-                sx={{ '& > :not(style)': { m: 1, width: '25ch' } }}
-                noValidate
-                autoComplete="off"
-            >
-                <TextInput
-                    name="subject"
-                    label="subject"
-                    id="outlined"
-                    value={formValues.subject}
-                    onChange={handleFormChange}
-                />
+        <p>2. Upload a template or fill out the subject and body!</p>
 
-            </Box>
-            <Box  //for body
+        <ToggleButtonGroup
+            value={templateStatus} 
+            exclusive
+            onChange={handleTemplateChange}
+            variant="outlined" 
+            sx = {{'& .MuiToggleButton-root': {color: '#A0AAB4', borderColor: 'white'}, '& .MuiToggleButton-root.Mui-selected': {color: '#3f51b5', borderColor: '#3f51b5'}}}
+        >
+            <ToggleButton value="template">Use template</ToggleButton>
+            <ToggleButton value="write">Write yourself</ToggleButton>
+        </ToggleButtonGroup>
+        {templateStatus == "template" && ( //template selected
+            <form onSubmit={handleSubmit}>
+            <br />
+            <p>Add a link to a public template document!</p>
+            <Box
                 component="form"
                 sx={{ '& > :not(style)': { m: 1, width: '52ch' } }}
                 noValidate
                 autoComplete="off"
             >
                 <TextInput
-                    name="body"
-                    id="outlined-multiline-static"
-                    label="body"
-                    multiline
-                    rows={4}
+                    name="templateLink"
+                    label="Template Link"
+                    id="outlined"
+                    value={formValues.link}
                     onChange={handleFormChange}
                 />
+
             </Box>
         </form>
+        )}
+        {templateStatus == "write" && ( //user chooses to write email
+            <form onSubmit={handleSubmit}>
+                <br />
+                <p>Draft email below!</p>
+                <Box
+                    component="form"
+                    sx={{ '& > :not(style)': { m: 1, width: '52ch' } }}
+                    noValidate
+                    autoComplete="off"
+                >
+                    <TextInput
+                        name="subject"
+                        label="subject"
+                        id="outlined"
+                        value={formValues.subject}
+                        onChange={handleFormChange}
+                    />
+
+                </Box>
+                <Box  //for body
+                    component="form"
+                    sx={{ '& > :not(style)': { m: 1, width: '52ch' } }}
+                    noValidate
+                    autoComplete="off"
+                >
+                    <TextInput
+                        name="body"
+                        id="outlined-multiline-static"
+                        label="body"
+                        multiline
+                        rows={4}
+                        onChange={handleFormChange}
+                    />
+                </Box>
+            </form>
+        )}
+        <br />
         <button onClick={sendEmail}>{buttonText}</button>
         <br /><br />
         <button onClick={() => signOut(auth)}>sign out !!</button>
