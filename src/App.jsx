@@ -202,7 +202,7 @@ function SignedInHTML({ user, token }) {
         }
         else {
             message =
-            "Content-Type: text/html; charset=UTF-8" +
+            "Content-Type: text/html; charset=UTF-8 \r\n" +
             "To: " + toEmail + "\r\n" +
             "Subject: " + formValues.subject + "\r\n\r\n" +
             formValues.body;
