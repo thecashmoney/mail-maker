@@ -15,6 +15,7 @@ const signOut = auth => auth.signOut().then(() => console.log('signed out'));
 const signIn = async auth => {
     const provider = new GoogleAuthProvider();
     provider.addScope('https://www.googleapis.com/auth/gmail.send');
+    provider.addScope('https://www.googleapis.com/auth/documents.readonly');
     signInWithPopup(auth, provider).then((result) => {
         const credential = GoogleAuthProvider.credentialFromResult(result);
         token = credential.accessToken;
@@ -62,7 +63,6 @@ function SignedInHTML({ user, token }) {
 
     // Handle checkbox change
     const handleSheetChange = (event) => {
-        // Update the state based on whether the checkbox is checked or not
         setSheet(event.target.checked);
     };
 
@@ -133,6 +133,54 @@ function SignedInHTML({ user, token }) {
         }
     }
 
+    async function getTemplate() {
+        try {
+            //look for spreadsheet id
+            const regex = /https:\/\/docs\.google\.com\/document\/d\/([a-zA-Z0-9_-]+)/;
+            const match = formValues.templateLink.match(regex);
+            console.log("Template ID: ", match[1]);
+            //receive template data
+            const response = await fetch('https://docs.googleapis.com/v1/documents/' + match[1], {
+                method: 'GET',
+                headers: {
+                    'Authorization': 'Bearer ' + token,
+                    'Accept': 'application/json',
+                }
+            })
+            const data = await response.json();
+            let message = "";
+            console.log("Loaded", data.title);
+            data.body.content.forEach(function(element) {
+                if (element.paragraph) {
+                    element.paragraph.elements.forEach(function(paragraphElement) {
+                        if (paragraphElement.textRun) {
+                            const textContent = paragraphElement.textRun.content;
+                            const textStyle = paragraphElement.textRun.textStyle;
+
+                            let fragment = textContent;
+
+                            if (textStyle.bold) fragment = '<b>' + fragment + '</b>';
+                            if (textStyle.italic) fragment = '<i>' + fragment + '</i>';
+                            if (textStyle.underline) fragment = '<u>' + fragment + '</u>';
+                            if (textStyle.link) {
+                                const url = textStyle.link.url;
+                                fragment = '<a href="' + url + '" target="_blank">' + fragment + '</a>';
+                            }
+                            message += fragment
+                        }
+                    });
+                    message += "<br>";
+                }
+            });
+            console.log(message);
+            return message;
+        }
+        catch {
+            console.error("Error reading template:");
+            return "";
+        }
+    }
+
     const sendEmail = async () => {
         const { email, subject, body } = formValues;
         console.log("Sheet: ", sheet);
@@ -143,11 +191,22 @@ function SignedInHTML({ user, token }) {
         else {
             toEmail = await getSheet();
         }
-        const message =
-            "From: " + user.email + "\r\n" + 
+        let message;
+        if (templateStatus == "template") {
+            const templateBody = await getTemplate();
+            message =
+            "Content-Type: text/html; charset=UTF-8 \r\n" +
+            "To: " + toEmail + "\r\n" +
+            "Subject: " + formValues.subject + "\r\n\r\n" +
+            templateBody;
+        }
+        else {
+            message =
+            "Content-Type: text/html; charset=UTF-8" +
             "To: " + toEmail + "\r\n" +
             "Subject: " + formValues.subject + "\r\n\r\n" +
             formValues.body;
+        }
         try {
             //make payload
             const payload = {
@@ -248,7 +307,7 @@ function SignedInHTML({ user, token }) {
         {templateStatus == "template" && ( //template selected
             <form onSubmit={handleSubmit}>
             <br />
-            <p>Add a link to a public template document!</p>
+            <p>Add a link to a template document! (doesn't need to be public)</p>
             <Box
                 component="form"
                 sx={{ '& > :not(style)': { m: 1, width: '52ch' } }}
@@ -303,6 +362,7 @@ function SignedInHTML({ user, token }) {
             </form>
         )}
         <br />
+        <p>3. send !!</p>
         <button onClick={sendEmail}>{buttonText}</button>
         <br /><br />
         <button onClick={() => signOut(auth)}>sign out !!</button>
