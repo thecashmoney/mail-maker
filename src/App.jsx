@@ -1,14 +1,14 @@
 "use strict";
-import { useState, useEffect } from 'react'
+import {useState, useEffect} from 'react'
 import './App.css'
 import Box from '@mui/material/Box';
 import ToggleButton from '@mui/material/ToggleButton';
 import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
 import TextField from '@mui/material/TextField';
-import { Checkbox, FormControlLabel, FormGroup } from '@mui/material';
-import { useAuth, useSigninCheck, FirebaseAppProvider, FirestoreProvider, useFirestoreDocData, useFirestore, useFirebaseApp, AuthProvider } from 'reactfire';
-import { getAuth } from 'firebase/auth';
-import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
+import {Checkbox, FormControlLabel, FormGroup, inputClasses} from '@mui/material';
+import {useAuth, useSigninCheck, FirebaseAppProvider, FirestoreProvider, useFirestoreDocData, useFirestore, useFirebaseApp, AuthProvider} from 'reactfire';
+import {getAuth} from 'firebase/auth';
+import {GoogleAuthProvider, signInWithPopup} from "firebase/auth";
 
 var token;
 const signOut = auth => auth.signOut().then(() => console.log('signed out'));
@@ -25,15 +25,15 @@ const signIn = async auth => {
 
 
 function Auth() {
-    const { status, data: signinResult } = useSigninCheck();
+    const {status, data: signinResult} = useSigninCheck();
 
     if (status === 'loading') {
         return <p>loading !!!</p>;
     }
 
-    const { signedIn, user } = signinResult;
+    const {signedIn, user} = signinResult;
     if (signedIn) {
-        return (<SignedInHTML user={user} token={token}/>);
+        return (<SignedInHTML user={user} token={token} />);
     } else return (<SignedOutHTML />);
 }
 
@@ -47,7 +47,7 @@ function App() {
     )
 }
 
-function SignedInHTML({ user, token }) {
+function SignedInHTML({user, token}) {
     const auth = useAuth();
     const [formValues, setFormValues] = useState({
         email: '',
@@ -56,10 +56,40 @@ function SignedInHTML({ user, token }) {
         range: '',
         templateLink: '',
     });
-
-
+    const [formFields, setFormFields] = useState([]);
     const [sheet, setSheet] = useState(false);
     const [templateStatus, setTemplate] = useState('template');
+    const messageArrHandler = {
+        messageArr: [],
+        addMessage(message) {
+            this.messageArr.push(message);
+        },
+        getMessages() {
+            return this.messageArr;
+        },
+        freeze() {
+            Object.freeze(this.messageArr);
+        },
+    };
+
+
+    const handleFormChange = (event) => {
+        const {name, value} = event.target;
+        setFormValues(prevValues => ({
+            ...prevValues,
+            [name]: value
+        }));
+    };
+
+    const addFormField = (label) => {
+        setFormFields(prevFormFields => ([...prevFormFields, {id: (prevFormFields.length + 1).toString(), value: '', label: label}]));
+    }
+    const handleFormFieldChange = (id, event) => {
+        const updatedFormField = formFields.map((formField) =>
+            formField.id === id ? {...formField, value: event.target.value, label: formField.label} : formField
+        );
+        setFormFields(updatedFormField);
+    }
 
     // Handle checkbox change
     const handleSheetChange = (event) => {
@@ -69,14 +99,6 @@ function SignedInHTML({ user, token }) {
     const handleTemplateChange = (event, newTemplateStatus) => {
         setTemplate(newTemplateStatus);
     }
-
-    const handleFormChange = (event) => {
-        const { name, value } = event.target;
-        setFormValues(prevValues => ({
-            ...prevValues,
-            [name]: value
-        }));
-    };
 
     const handleSubmit = (event) => {
         event.preventDefault();
@@ -95,7 +117,7 @@ function SignedInHTML({ user, token }) {
             let key;
             const idToken = await user.getIdToken(/* forceRefresh */ true);
             // const keyRaw = await fetch ('http://127.0.0.1:5001/mail-maker-1b4d9/us-central1/getSheetsKey', { //local
-            const keyRaw = await fetch ('https://us-central1-mail-maker-1b4d9.cloudfunctions.net/getSheetsKey', { //deployed
+            const keyRaw = await fetch('https://us-central1-mail-maker-1b4d9.cloudfunctions.net/getSheetsKey', { //deployed
                 method: 'GET',
                 headers: {
                     'Authorization': idToken,
@@ -109,7 +131,7 @@ function SignedInHTML({ user, token }) {
 
 
             //receive spreadsheet data
-            const response = await fetch('https://sheets.googleapis.com/v4/spreadsheets/' + match[1] + '/values/'+ formValues.range +'?key='+ key, {
+            const response = await fetch('https://sheets.googleapis.com/v4/spreadsheets/' + match[1] + '/values/' + formValues.range + '?key=' + key, {
                 method: 'GET',
                 headers: {
                     'Accept': 'application/json',
@@ -135,7 +157,7 @@ function SignedInHTML({ user, token }) {
 
     async function getTemplate() {
         try {
-            //look for spreadsheet id
+            //look for template id
             const regex = /https:\/\/docs\.google\.com\/document\/d\/([a-zA-Z0-9_-]+)/;
             const match = formValues.templateLink.match(regex);
             console.log("Template ID: ", match[1]);
@@ -150,9 +172,11 @@ function SignedInHTML({ user, token }) {
             const data = await response.json();
             let message = "";
             console.log("Loaded", data.title);
-            data.body.content.forEach(function(element) {
+
+            //parse data
+            data.body.content.forEach(function (element) {
                 if (element.paragraph) {
-                    element.paragraph.elements.forEach(function(paragraphElement) {
+                    element.paragraph.elements.forEach(function (paragraphElement) {
                         if (paragraphElement.textRun) {
                             const textContent = paragraphElement.textRun.content;
                             const textStyle = paragraphElement.textRun.textStyle;
@@ -166,14 +190,22 @@ function SignedInHTML({ user, token }) {
                                 const url = textStyle.link.url;
                                 fragment = '<a href="' + url + '" target="_blank">' + fragment + '</a>';
                             }
-                            message += fragment
+
+                            //check for format fields
+                            if (textStyle.foregroundColor && textStyle.weightedFontFamily){
+                                addFormField(fragment);
+                                messageArrHandler.addMessage(message);
+                                message = "";
+                            }
+                            else message += fragment;
                         }
                     });
                     message += "<br>";
                 }
             });
-            console.log(message);
-            return message;
+            messageArrHandler.addMessage(message);
+            messageArrHandler.freeze();
+            console.log(messageArrHandler);
         }
         catch {
             console.error("Error reading template:");
@@ -182,7 +214,8 @@ function SignedInHTML({ user, token }) {
     }
 
     const sendEmail = async () => {
-        const { email, subject, body } = formValues;
+        const {email, subject, body} = formValues;
+        console.log(messageArrHandler);
         console.log("Sheet: ", sheet);
         let toEmail;
         if (!sheet) {
@@ -193,19 +226,24 @@ function SignedInHTML({ user, token }) {
         }
         let message;
         if (templateStatus == "template") {
-            const templateBody = await getTemplate();
+            const messageArr = messageArrHandler.messageArr;
+            console.log(messageArr);
             message =
-            "Content-Type: text/html; charset=UTF-8 \r\n" +
-            "To: " + toEmail + "\r\n" +
-            "Subject: " + formValues.subject + "\r\n\r\n" +
-            templateBody;
+                "Content-Type: text/html; charset=UTF-8 \r\n" +
+                "To: " + toEmail + "\r\n" +
+                "Subject: " + formValues.subject + "\r\n\r\n";
+            for (let i = 0; i < messageArr.length; i++) {
+                message += messageArr[i];
+                message += formFields[i].value;
+            }
+            console.log(message);
         }
         else {
             message =
-            "Content-Type: text/html; charset=UTF-8 \r\n" +
-            "To: " + toEmail + "\r\n" +
-            "Subject: " + formValues.subject + "\r\n\r\n" +
-            formValues.body;
+                "Content-Type: text/html; charset=UTF-8 \r\n" +
+                "To: " + toEmail + "\r\n" +
+                "Subject: " + formValues.subject + "\r\n\r\n" +
+                formValues.body;
         }
         try {
             //make payload
@@ -213,16 +251,16 @@ function SignedInHTML({ user, token }) {
                 token: token,
                 body: message,
             };
-            const response = await fetch('https://sendemail-niisnxz5da-uc.a.run.app', { //for deployed app
+            // const response = await fetch('https://sendemail-niisnxz5da-uc.a.run.app', { //for deployed app
 
-            // const response = await fetch('http://127.0.0.1:5001/mail-maker-1b4d9/us-central1/sendEmail', {   //for debug on local side
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(payload),
-            });
-    
+            // // const response = await fetch('http://127.0.0.1:5001/mail-maker-1b4d9/us-central1/sendEmail', {   //for debug on local side
+            //     method: 'POST',
+            //     headers: {
+            //         'Content-Type': 'application/json'
+            //     },
+            //     body: JSON.stringify(payload),
+            // });
+
             if (response.ok) {
                 const result = await response;
                 console.log('Email sent:', result);
@@ -253,35 +291,35 @@ function SignedInHTML({ user, token }) {
         <br />
         <p>1. Add your recipients or link a public google email sheet below!</p>
         <Box //for email, subject lines
-                component="form"
-                sx={{ display: 'flex', flexDirection: 'row', '& > :not(style)': { m: 1, width: '25ch' }, alignItems: 'center',  justifyContent: 'space-between' }}
-                noValidate
-                autoComplete="off"
-            >
-                <TextInput
-                    name="email"
-                    label="email"
-                    id="outlined"
-                    value={formValues.email}
-                    onChange={handleFormChange}
-                />
-                <FormGroup>
-                    <FormControlLabel control={
-                        <Checkbox 
-                            onChange={handleSheetChange}
-                            sx={{color: '#A0AAB4', '& .MuiCheckbox-root': {borderColor: 'white'}}}
-                        />} 
-                        label="Google Sheet" 
-                        sx = {{display: 'flex', justifyContent: 'center',}}
-                    />
-                </FormGroup>
-            </Box>
-        {sheet && (
-            <Box  //for body
             component="form"
-            sx={{ '& > :not(style)': { m: 1, width: '52ch' } }}
+            sx={{display: 'flex', flexDirection: 'row', '& > :not(style)': {m: 1, width: '25ch'}, alignItems: 'center', justifyContent: 'space-between'}}
             noValidate
             autoComplete="off"
+        >
+            <TextInput
+                name="email"
+                label="email"
+                id="outlined"
+                value={formValues.email}
+                onChange={handleFormChange}
+            />
+            <FormGroup>
+                <FormControlLabel control={
+                    <Checkbox
+                        onChange={handleSheetChange}
+                        sx={{color: '#A0AAB4', '& .MuiCheckbox-root': {borderColor: 'white'}}}
+                    />}
+                    label="Google Sheet"
+                    sx={{display: 'flex', justifyContent: 'center', }}
+                />
+            </FormGroup>
+        </Box>
+        {sheet && (
+            <Box  //for body
+                component="form"
+                sx={{'& > :not(style)': {m: 1, width: '52ch'}}}
+                noValidate
+                autoComplete="off"
             >
                 <TextInput
                     name="range"
@@ -295,35 +333,62 @@ function SignedInHTML({ user, token }) {
         <p>2. Upload a template or fill out the subject and body!</p>
 
         <ToggleButtonGroup
-            value={templateStatus} 
+            value={templateStatus}
             exclusive
             onChange={handleTemplateChange}
-            variant="outlined" 
-            sx = {{'& .MuiToggleButton-root': {color: '#A0AAB4', borderColor: 'white'}, '& .MuiToggleButton-root.Mui-selected': {color: '#3f51b5', borderColor: '#3f51b5'}}}
+            variant="outlined"
+            sx={{'& .MuiToggleButton-root': {color: '#A0AAB4', borderColor: 'white'}, '& .MuiToggleButton-root.Mui-selected': {color: '#3f51b5', borderColor: '#3f51b5'}}}
         >
             <ToggleButton value="template">Use template</ToggleButton>
             <ToggleButton value="write">Write yourself</ToggleButton>
         </ToggleButtonGroup>
         {templateStatus == "template" && ( //template selected
             <form onSubmit={handleSubmit}>
-            <br />
-            <p>Add a link to a template document! (doesn't need to be public)</p>
-            <Box
-                component="form"
-                sx={{ '& > :not(style)': { m: 1, width: '52ch' } }}
-                noValidate
-                autoComplete="off"
-            >
-                <TextInput
-                    name="templateLink"
-                    label="Template Link"
-                    id="outlined"
-                    value={formValues.link}
-                    onChange={handleFormChange}
-                />
-
-            </Box>
-        </form>
+                <br />
+                <p>Add a link to a template document! (doesn't need to be public)</p>
+                <Box
+                    component="form"
+                    sx={{'& > :not(style)': {m: 1, width: '25ch'}}}
+                    noValidate
+                    autoComplete="off"
+                >
+                    <TextInput
+                        name="templateLink"
+                        label="Template Link"
+                        id="outlined"
+                        value={formValues.link}
+                        onChange={handleFormChange}
+                    />
+                    <button type="button" onClick={async () => {await getTemplate();}} style={{width:'10ch', marginLeft:"3ch", marginTop:"1.5ch"}}>Load!</button>
+                </Box>
+                {formFields.length != 0 && (
+                    <Box
+                        component="form"
+                        sx={{display: 'flex', flexDirection: 'row', '& > :not(style)': {m: 1, width: '25ch'}, alignItems: 'center', justifyContent: 'space-between'}}
+                        noValidate
+                        autoComplete="off"
+                    >
+                        <p>Inputs detected!</p>
+                        <Box
+                            component="form"
+                            sx={{'& > :not(style)': {display: 'flex', flexDirection: 'column', m: 2, width: '25ch'}}}
+                            noValidate
+                            autoComplete="off"
+                        >
+                            {formFields.map((formField) => (
+                                <TextInput
+                                    key={formField.id}
+                                    name={formField.id}
+                                    label = {formField.label}
+                                    id="outlined"
+                                    value={formField.value}
+                                    onChange={(event) => handleFormFieldChange(formField.id, event)}
+                                />
+                            ))}
+                        </Box>
+                    </Box>
+                )}
+            </form>
         )}
         {templateStatus == "write" && ( //user chooses to write email
             <form onSubmit={handleSubmit}>
@@ -331,7 +396,7 @@ function SignedInHTML({ user, token }) {
                 <p>Draft email below!</p>
                 <Box
                     component="form"
-                    sx={{ '& > :not(style)': { m: 1, width: '52ch' } }}
+                    sx={{'& > :not(style)': {m: 1, width: '52ch'}}}
                     noValidate
                     autoComplete="off"
                 >
@@ -346,7 +411,7 @@ function SignedInHTML({ user, token }) {
                 </Box>
                 <Box  //for body
                     component="form"
-                    sx={{ '& > :not(style)': { m: 1, width: '52ch' } }}
+                    sx={{'& > :not(style)': {m: 1, width: '52ch'}}}
                     noValidate
                     autoComplete="off"
                 >
@@ -387,7 +452,7 @@ function SignedOutHTML() {
 export default App;
 
 
-function TextInput({ name, label, id, value, onChange, multiline = false, rows = 4 }) {
+function TextInput({name, label, id, value, onChange, multiline = false, rows = 4}) {
     return (
         <TextField
             name={name}
