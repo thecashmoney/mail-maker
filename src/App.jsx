@@ -53,24 +53,11 @@ function SignedInHTML({user}) {
         body: '',
         range: '',
         templateLink: '',
+        templateName: '',
     });
     const [formFields, setFormFields] = useState([]);
     const [sheet, setSheet] = useState(false);
     const [templateStatus, setTemplate] = useState('template');
-
-    // const messageArrHandler = {
-    //     messageArr: [],
-    //     addMessage(message) {
-    //         this.messageArr.push(message);
-    //     },
-    //     getMessages() {
-    //         return this.messageArr;
-    //     },
-    //     freeze() {
-    //         Object.freeze(this.messageArr);
-    //     },
-    // };
-
 
     const handleFormChange = (event) => {
         const {name, value} = event.target;
@@ -224,8 +211,6 @@ function SignedInHTML({user}) {
                                 if (textStyle.italic) message += '</i>';
                                 if (textStyle.bold) message += '</b>';
 
-                                console.log(messageArr);
-                                console.log(textValues);
                                 //load up next message (if existing) and add them
                                 if (textValues != undefined) {
                                     textValues.forEach((value) => {
@@ -252,7 +237,6 @@ function SignedInHTML({user}) {
             });
             messageArr.push(message);
             localStorage.setItem("messageArr", JSON.stringify(messageArr));
-            console.log(messageArr);
         }
         catch {
             console.error("Error reading template:");
@@ -329,6 +313,37 @@ function SignedInHTML({user}) {
         }
     };
 
+    const saveTemplate = async () => {
+        let savedTemplates = JSON.parse(localStorage.getItem("savedTemplates")) || [];
+        let template;
+        if (templateStatus == "template") {
+            template = {
+                email: formValues.email,
+                sheet: sheet,
+                range: formValues.range,
+                subject: formValues.subject,
+                templateStatus: "template",
+                templateLink: formValues.templateLink,
+                templateName: formValues.templateName,
+            };
+        }
+        else {
+            template = {
+                email: formValues.email,
+                sheet: sheet,
+                range: formValues.range,
+                subject: formValues.subject,
+                templateStatus: templateStatus,
+                templateLink: formValues.templateLink,
+                templateName: formValues.templateName,
+            };
+        }
+        const savedTemplate = JSON.stringify(template);
+        savedTemplates.push(savedTemplate);
+        localStorage.setItem("savedTemplates", JSON.stringify(savedTemplates));
+        console.log(savedTemplates);
+    }
+
     return <div>
         <nav>
             <div class="navitems">
@@ -344,125 +359,33 @@ function SignedInHTML({user}) {
         <br /><br />
         <h2>draft your email here !!</h2>
         <br />
-        <p>1. Add your recipients or link a public google email sheet below!</p>
-        <Box //for email, subject lines
-            component="form"
-            sx={{display: 'flex', flexDirection: 'row', '& > :not(style)': {m: 1, width: '25ch'}, alignItems: 'center', justifyContent: 'space-between'}}
-            noValidate
-            autoComplete="off"
-        >
-            <TextInput
-                name="email"
-                label="email"
-                id="outlined"
-                value={formValues.email}
-                onChange={handleFormChange}
-            />
-            <FormGroup>
-                <FormControlLabel control={
-                    <Checkbox
-                        onChange={handleSheetChange}
-                        sx={{color: '#A0AAB4', '& .MuiCheckbox-root': {borderColor: 'white'}}}
-                    />}
-                    label="Google Sheet"
-                    sx={{display: 'flex', justifyContent: 'center', }}
-                />
-            </FormGroup>
-        </Box>
-        {sheet && (
-            <Box  //for body
+        <div class="emailBox">
+            <p>1. Add your recipients or link a public google email sheet below!</p>
+            <Box //for email line
                 component="form"
-                sx={{'& > :not(style)': {m: 1, width: '52ch'}}}
+                sx={{display: 'flex', flexDirection: 'row', '& > :not(style)': {m: 1, width: '25ch'}, alignItems: 'center', justifyContent: 'space-between'}}
                 noValidate
                 autoComplete="off"
             >
                 <TextInput
-                    name="range"
-                    label="Range (e.g. A1:A2)"
+                    name="email"
+                    label="email"
                     id="outlined"
-                    value={formValues.range}
+                    value={formValues.email}
                     onChange={handleFormChange}
                 />
-            </Box>
-        )}
-        <Box
-            component="form"
-            sx={{'& > :not(style)': {m: 1, width: '52ch'}}}
-            noValidate
-            autoComplete="off"
-        >
-            <TextInput
-                name="subject"
-                label="subject"
-                id="outlined"
-                value={formValues.subject}
-                onChange={handleFormChange}
-            />
-        </Box>
-        <p>2. Upload a template or fill out the subject and body!</p>
-
-        <ToggleButtonGroup
-            value={templateStatus}
-            exclusive
-            onChange={handleTemplateChange}
-            variant="outlined"
-            sx={{'& .MuiToggleButton-root': {color: '#A0AAB4', borderColor: 'white'}, '& .MuiToggleButton-root.Mui-selected': {color: '#3f51b5', borderColor: '#3f51b5'}}}
-        >
-            <ToggleButton value="template">Use template</ToggleButton>
-            <ToggleButton value="write">Write yourself</ToggleButton>
-        </ToggleButtonGroup>
-        {templateStatus == "template" && ( //template selected
-            <form onSubmit={handleSubmit}>
-                <br />
-                <p>Add a link to a template document! (doesn't need to be public)</p>
-                <Box
-                    component="form"
-                    sx={{'& > :not(style)': {m: 1, width: '25ch'}}}
-                    noValidate
-                    autoComplete="off"
-                >
-                    <TextInput
-                        name="templateLink"
-                        label="Template Link"
-                        id="outlined"
-                        value={formValues.link}
-                        onChange={handleFormChange}
+                <FormGroup>
+                    <FormControlLabel control={
+                        <Checkbox
+                            onChange={handleSheetChange}
+                            sx={{color: '#A0AAB4', '& .MuiCheckbox-root': {borderColor: '#cad2c5'}, '&.Mui-checked': {color: '#cad2c5'}}}
+                        />}
+                        label="Google Sheet"
+                        sx={{display: 'flex', justifyContent: 'center', }}
                     />
-                    <button type="button" onClick={async () => {await getTemplate();}} style={{width:'10ch', marginLeft:"3ch", marginTop:"1.5ch"}}>Load!</button>
-                </Box>
-                {formFields.length != 0 && (
-                    <Box
-                        component="form"
-                        sx={{display: 'flex', flexDirection: 'row', '& > :not(style)': {m: 1, width: '25ch'}, alignItems: 'center', justifyContent: 'space-between'}}
-                        noValidate
-                        autoComplete="off"
-                    >
-                        <p>Input fields detected!</p>
-                        <Box
-                            component="form"
-                            sx={{'& > :not(style)': {display: 'flex', flexDirection: 'column', m: 2, width: '25ch'}}}
-                            noValidate
-                            autoComplete="off"
-                        >
-                            {formFields.map((formField) => (
-                                <TextInput
-                                    key={formField.id}
-                                    name={formField.id}
-                                    label = {formField.label}
-                                    id="outlined"
-                                    value={formField.value}
-                                    onChange={(event) => handleFormFieldChange(formField.id, event)}
-                                />
-                            ))}
-                        </Box>
-                    </Box>
-                )}
-            </form>
-        )}
-        {templateStatus == "write" && ( //user chooses to write email
-            <form onSubmit={handleSubmit}>
-                <br />
-                <p>Draft email below!</p>
+                </FormGroup>
+            </Box>
+            {sheet && (
                 <Box  //for body
                     component="form"
                     sx={{'& > :not(style)': {m: 1, width: '52ch'}}}
@@ -470,21 +393,132 @@ function SignedInHTML({user}) {
                     autoComplete="off"
                 >
                     <TextInput
-                        name="body"
-                        id="outlined-multiline-static"
-                        label="body"
-                        multiline
-                        rows={4}
+                        name="range"
+                        label="Range (e.g. A1:A2)"
+                        id="outlined"
+                        value={formValues.range}
                         onChange={handleFormChange}
                     />
                 </Box>
-            </form>
-        )}
-        <br />
-        <p>3. send !!</p>
-        <button onClick={sendEmail}>{buttonText}</button>
+            )}
+            <Box //for subject line
+                component="form"
+                sx={{'& > :not(style)': {m: 1, width: '52ch'}}}
+                noValidate
+                autoComplete="off"
+            >
+                <TextInput
+                    name="subject"
+                    label="subject"
+                    id="outlined"
+                    value={formValues.subject}
+                    onChange={handleFormChange}
+                />
+            </Box>
+            <p>2. Upload a template or fill out the body!</p>
+
+            <ToggleButtonGroup
+                value={templateStatus}
+                exclusive
+                onChange={handleTemplateChange}
+                variant="outlined"
+                sx={{'& .MuiToggleButton-root': {color: '#A0AAB4', borderColor: '#cad2c5'}, '& .MuiToggleButton-root.Mui-selected': {color: 'white', borderColor: 'white'}}}
+            >
+                <ToggleButton value="template">Use template</ToggleButton>
+                <ToggleButton value="write">Write yourself</ToggleButton>
+            </ToggleButtonGroup>
+            {templateStatus == "template" && ( //template selected
+                <form onSubmit={handleSubmit}>
+                    <br />
+                    <p>Add a link to a template document! (doesn't need to be public)</p>
+                    <Box
+                        component="form"
+                        sx={{'& > :not(style)': {m: 1, width: '25ch'}}}
+                        noValidate
+                        autoComplete="off"
+                    >
+                        <TextInput
+                            name="templateLink"
+                            label="Template Link"
+                            id="outlined"
+                            value={formValues.templateLink}
+                            onChange={handleFormChange}
+                        />
+                        <button type="button" onClick={async () => {await getTemplate();}} style={{width:'10ch', marginLeft:"3ch", marginTop:"1.5ch"}}>Load!</button>
+                    </Box>
+                    {formFields.length != 0 && (
+                        <Box
+                            component="form"
+                            sx={{display: 'flex', flexDirection: 'row', '& > :not(style)': {m: 1, width: '25ch'}, alignItems: 'center', justifyContent: 'space-between'}}
+                            noValidate
+                            autoComplete="off"
+                        >
+                            <p>Input fields detected!</p>
+                            <Box
+                                component="form"
+                                sx={{'& > :not(style)': {display: 'flex', flexDirection: 'column', m: 2, width: '25ch'}}}
+                                noValidate
+                                autoComplete="off"
+                            >
+                                {formFields.map((formField) => (
+                                    <TextInput
+                                        key={formField.id}
+                                        name={formField.id}
+                                        label = {formField.label}
+                                        id="outlined"
+                                        value={formField.value}
+                                        onChange={(event) => handleFormFieldChange(formField.id, event)}
+                                    />
+                                ))}
+                            </Box>
+                        </Box>
+                    )}
+                </form>
+            )}
+            {templateStatus == "write" && ( //user chooses to write email
+                <form onSubmit={handleSubmit}>
+                    <br />
+                    <p>Draft email below!</p>
+                    <Box  //for body
+                        component="form"
+                        sx={{'& > :not(style)': {m: 1, width: '52ch'}}}
+                        noValidate
+                        autoComplete="off"
+                    >
+                        <TextInput
+                            name="body"
+                            id="outlined-multiline-static"
+                            label="body"
+                            multiline
+                            rows={4}
+                            onChange={handleFormChange}
+                        />
+                    </Box>
+                </form>
+            )}
+            <br />
+            <p>3. send !!</p>
+            <button onClick={sendEmail}>{buttonText}</button>
+            <br /><br />
+            <p>Save template?</p>
+            <Box
+                component="form"
+                sx={{'& > :not(style)': {m: 1, width: '25ch'}}}
+                noValidate
+                autoComplete="off"
+            >
+                <TextInput
+                    name="templateName"
+                    label="Template Name"
+                    id="outlined"
+                    value={formValues.templateName}
+                    onChange={handleFormChange}
+                />
+                <button type="button" onClick={saveTemplate} style={{width:'10ch', marginLeft:"3ch", marginTop:"1.5ch"}}>Save!</button>
+            </Box>
+        </div>
         <br /><br />
-        <button onClick={() => signOut(auth)}>sign out !!</button>
+        <button onClick={() => signOut(auth)} class="signOutButton">sign out !!</button>
     </div>
 }
 
@@ -495,7 +529,7 @@ function SignedOutHTML() {
         <br />
         <h3>give a template, and we'll mass send emails!</h3>
         <br />
-        <button onClick={() => signIn(auth)}>sign in !!! (requires google account access) 🚀</button>
+        <button onClick={() => signIn(auth)} class="signInButton">sign in !!! (requires google account access) 🚀</button>
 
         <br /><br /><br />
         <h3>NOTE</h3>
@@ -527,7 +561,7 @@ function TextInput({name, label, id, value, onChange, multiline = false, rows = 
                     borderBottomColor: '#B2BAC2',
                 },
                 input: {
-                    color: 'white',
+                    color: '#cad2c5',
                 },
                 '& .MuiOutlinedInput-root': {
                     '& fieldset': {
@@ -540,7 +574,7 @@ function TextInput({name, label, id, value, onChange, multiline = false, rows = 
                         borderColor: '#6F7E8C',
                     },
                     '& textarea': {
-                        color: 'white', // Change text color inside the textarea
+                        color: '#cad2c5', // Change text color inside the textarea
                     },
                 },
             }}
