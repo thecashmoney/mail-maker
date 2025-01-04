@@ -10,7 +10,6 @@ import {useAuth, useSigninCheck, FirebaseAppProvider, FirestoreProvider, useFire
 import {getAuth} from 'firebase/auth';
 import {GoogleAuthProvider, signInWithPopup} from "firebase/auth";
 
-var token;
 const signOut = auth => auth.signOut().then(() => console.log('signed out'));
 const signIn = async auth => {
     const provider = new GoogleAuthProvider();
@@ -18,8 +17,7 @@ const signIn = async auth => {
     provider.addScope('https://www.googleapis.com/auth/documents.readonly');
     signInWithPopup(auth, provider).then((result) => {
         const credential = GoogleAuthProvider.credentialFromResult(result);
-        token = credential.accessToken;
-        Object.freeze(token);
+        localStorage.setItem("token", credential.accessToken);
     });
 }
 
@@ -33,7 +31,7 @@ function Auth() {
 
     const {signedIn, user} = signinResult;
     if (signedIn) {
-        return (<SignedInHTML user={user} token={token} />);
+        return (<SignedInHTML user={user} />);
     } else return (<SignedOutHTML />);
 }
 
@@ -47,7 +45,7 @@ function App() {
     )
 }
 
-function SignedInHTML({user, token}) {
+function SignedInHTML({user}) {
     const auth = useAuth();
     const [formValues, setFormValues] = useState({
         email: '',
@@ -59,18 +57,19 @@ function SignedInHTML({user, token}) {
     const [formFields, setFormFields] = useState([]);
     const [sheet, setSheet] = useState(false);
     const [templateStatus, setTemplate] = useState('template');
-    const messageArrHandler = {
-        messageArr: [],
-        addMessage(message) {
-            this.messageArr.push(message);
-        },
-        getMessages() {
-            return this.messageArr;
-        },
-        freeze() {
-            Object.freeze(this.messageArr);
-        },
-    };
+
+    // const messageArrHandler = {
+    //     messageArr: [],
+    //     addMessage(message) {
+    //         this.messageArr.push(message);
+    //     },
+    //     getMessages() {
+    //         return this.messageArr;
+    //     },
+    //     freeze() {
+    //         Object.freeze(this.messageArr);
+    //     },
+    // };
 
 
     const handleFormChange = (event) => {
@@ -162,17 +161,18 @@ function SignedInHTML({user, token}) {
             const match = formValues.templateLink.match(regex);
             console.log("Template ID: ", match[1]);
             //receive template data
+            const token = localStorage.getItem("token")
             const response = await fetch('https://docs.googleapis.com/v1/documents/' + match[1], {
                 method: 'GET',
                 headers: {
                     'Authorization': 'Bearer ' + token,
                     'Accept': 'application/json',
                 }
-            })
+            });
             const data = await response.json();
             let message = "";
+            let messageArr = [];
             console.log("Loaded", data.title);
-
             //parse data
             data.body.content.forEach(function (element) {
                 if (element.paragraph) {
@@ -183,29 +183,76 @@ function SignedInHTML({user, token}) {
 
                             let fragment = textContent;
 
-                            if (textStyle.bold) fragment = '<b>' + fragment + '</b>';
-                            if (textStyle.italic) fragment = '<i>' + fragment + '</i>';
-                            if (textStyle.underline) fragment = '<u>' + fragment + '</u>';
-                            if (textStyle.link) {
-                                const url = textStyle.link.url;
-                                fragment = '<a href="' + url + '" target="_blank">' + fragment + '</a>';
-                            }
+                            const textFieldMatches = [...fragment.matchAll(/\\(.*?)\\/g)]; //look for backslashes
+                            //if there are backslash matches
+                            if (textFieldMatches.length != 0){
 
-                            //check for format fields
-                            if (textStyle.foregroundColor && textStyle.weightedFontFamily){
-                                addFormField(fragment);
-                                messageArrHandler.addMessage(message);
+                                //slice up text into pieces with matches or plaintext, add matches
+                                let currentString = fragment;
+                                let currentIndex = 0;
+                                let fragmentParts = [];
+                                
+                                textFieldMatches.forEach(match => {
+                                    const beforeMatch = currentString.slice(currentIndex, match.index);
+                                    if(beforeMatch) fragmentParts.push({type: 'text', value: beforeMatch});
+                                    fragmentParts.push({type: 'match', value: match[1] });
+                                    currentIndex = match.index + match[0].length;
+                                    addFormField(match[1]);
+                                })
+
+                                //account for formatting
+                                if (textStyle.bold) message += '<b>';
+                                if (textStyle.italic) message += '<i>';
+                                if (textStyle.underline) message += '<u>';
+
+                                //look for textValues in between
+                                let textValues;
+                                if (fragmentParts.some(part => part.type === 'text')) {
+                                    //add first part of textValues to previous message and add it in
+                                    textValues = (fragmentParts.filter(part => part.type === 'text')).map(part => part.value)
+                                    message += textValues.shift();
+                                }
+
+                                //add to messageArr
+                                messageArr.push(message);
+
+                                //reset message
                                 message = "";
+
+                                //add formatting closing brackets
+                                if (textStyle.underline) message += '</u>';
+                                if (textStyle.italic) message += '</i>';
+                                if (textStyle.bold) message += '</b>';
+
+                                console.log(messageArr);
+                                console.log(textValues);
+                                //load up next message (if existing) and add them
+                                if (textValues != undefined) {
+                                    textValues.forEach((value) => {
+                                        message += value;
+                                        messageArr.push(message);
+                                        message = "";
+                                    });
+                                }
                             }
-                            else message += fragment;
+                            else {
+                                if (textStyle.bold) fragment = '<b>' + fragment + '</b>';
+                                if (textStyle.italic) fragment = '<i>' + fragment + '</i>';
+                                if (textStyle.underline) fragment = '<u>' + fragment + '</u>';
+                                if (textStyle.link) {
+                                    const url = textStyle.link.url;
+                                    fragment = '<a href="' + url + '" target="_blank">' + fragment + '</a>';
+                                }
+                                message += fragment;
+                            }
                         }
                     });
                     message += "<br>";
                 }
             });
-            messageArrHandler.addMessage(message);
-            messageArrHandler.freeze();
-            console.log(messageArrHandler);
+            messageArr.push(message);
+            localStorage.setItem("messageArr", JSON.stringify(messageArr));
+            console.log(messageArr);
         }
         catch {
             console.error("Error reading template:");
@@ -215,7 +262,6 @@ function SignedInHTML({user, token}) {
 
     const sendEmail = async () => {
         const {email, subject, body} = formValues;
-        console.log(messageArrHandler);
         console.log("Sheet: ", sheet);
         let toEmail;
         if (!sheet) {
@@ -226,16 +272,24 @@ function SignedInHTML({user, token}) {
         }
         let message;
         if (templateStatus == "template") {
-            const messageArr = messageArrHandler.messageArr;
+            const messageArr = JSON.parse(localStorage.getItem("messageArr"));
             console.log(messageArr);
+
+            //create basic message
             message =
                 "Content-Type: text/html; charset=UTF-8 \r\n" +
                 "To: " + toEmail + "\r\n" +
                 "Subject: " + formValues.subject + "\r\n\r\n";
-            for (let i = 0; i < messageArr.length; i++) {
+            
+            //add custom data
+            for (let i = 0; i < messageArr.length - 1; i++) {
                 message += messageArr[i];
                 message += formFields[i].value;
             }
+
+            //add last message part
+            message += messageArr[messageArr.length-1];
+
             console.log(message);
         }
         else {
@@ -247,19 +301,20 @@ function SignedInHTML({user, token}) {
         }
         try {
             //make payload
+            const token = localStorage.getItem("token");
             const payload = {
                 token: token,
                 body: message,
             };
-            // const response = await fetch('https://sendemail-niisnxz5da-uc.a.run.app', { //for deployed app
+            const response = await fetch('https://sendemail-niisnxz5da-uc.a.run.app', { //for deployed app
 
-            // // const response = await fetch('http://127.0.0.1:5001/mail-maker-1b4d9/us-central1/sendEmail', {   //for debug on local side
-            //     method: 'POST',
-            //     headers: {
-            //         'Content-Type': 'application/json'
-            //     },
-            //     body: JSON.stringify(payload),
-            // });
+            // const response = await fetch('http://127.0.0.1:5001/mail-maker-1b4d9/us-central1/sendEmail', {   //for debug on local side
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload),
+            });
 
             if (response.ok) {
                 const result = await response;
@@ -330,6 +385,20 @@ function SignedInHTML({user, token}) {
                 />
             </Box>
         )}
+        <Box
+            component="form"
+            sx={{'& > :not(style)': {m: 1, width: '52ch'}}}
+            noValidate
+            autoComplete="off"
+        >
+            <TextInput
+                name="subject"
+                label="subject"
+                id="outlined"
+                value={formValues.subject}
+                onChange={handleFormChange}
+            />
+        </Box>
         <p>2. Upload a template or fill out the subject and body!</p>
 
         <ToggleButtonGroup
@@ -368,7 +437,7 @@ function SignedInHTML({user, token}) {
                         noValidate
                         autoComplete="off"
                     >
-                        <p>Inputs detected!</p>
+                        <p>Input fields detected!</p>
                         <Box
                             component="form"
                             sx={{'& > :not(style)': {display: 'flex', flexDirection: 'column', m: 2, width: '25ch'}}}
@@ -394,21 +463,6 @@ function SignedInHTML({user, token}) {
             <form onSubmit={handleSubmit}>
                 <br />
                 <p>Draft email below!</p>
-                <Box
-                    component="form"
-                    sx={{'& > :not(style)': {m: 1, width: '52ch'}}}
-                    noValidate
-                    autoComplete="off"
-                >
-                    <TextInput
-                        name="subject"
-                        label="subject"
-                        id="outlined"
-                        value={formValues.subject}
-                        onChange={handleFormChange}
-                    />
-
-                </Box>
                 <Box  //for body
                     component="form"
                     sx={{'& > :not(style)': {m: 1, width: '52ch'}}}
