@@ -2,6 +2,8 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
 import { FirebaseAppProvider, FirestoreProvider, useFirestoreDocData, useFirestore, useFirebaseApp } from 'reactfire';
+import { initializeApp } from 'firebase/app';
+import { getStorage } from 'firebase/storage';
 import App from './App.jsx'
 import '@fontsource/roboto/300.css';
 import '@fontsource/roboto/400.css';
@@ -17,6 +19,9 @@ const firebaseConfig = {
   appId: "1:440165704568:web:66e5b19b938b9b69c0de8d",
   measurementId: "G-FSHGMFJHMF"
 };
+
+const app = initializeApp(firebaseConfig);
+const storage = getStorage(app);
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>

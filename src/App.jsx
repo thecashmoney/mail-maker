@@ -6,9 +6,12 @@ import ToggleButton from '@mui/material/ToggleButton';
 import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
 import TextField from '@mui/material/TextField';
 import {Checkbox, FormControlLabel, FormGroup, inputClasses} from '@mui/material';
-import {useAuth, useSigninCheck, FirebaseAppProvider, FirestoreProvider, useFirestoreDocData, useFirestore, useFirebaseApp, AuthProvider} from 'reactfire';
+import {useAuth, useSigninCheck, FirebaseAppProvider, FirestoreProvider, useFirestoreDocData, useFirestore, useFirebaseApp, AuthProvider, useStorage} from 'reactfire';
 import {getAuth} from 'firebase/auth';
 import {GoogleAuthProvider, signInWithPopup} from "firebase/auth";
+import {ref, uploadBytesResumable, getDownloadURL} from 'firebase/storage';
+import {IconButton} from '@mui/material';
+import AddIcon from '@mui/icons-material/Add';
 
 const signOut = auth => auth.signOut().then(() => console.log('signed out'));
 const signIn = async auth => {
@@ -20,7 +23,6 @@ const signIn = async auth => {
         localStorage.setItem("token", credential.accessToken);
     });
 }
-
 
 function Auth() {
     const {status, data: signinResult} = useSigninCheck();
@@ -46,6 +48,7 @@ function App() {
 }
 
 function SignedInHTML({user}) {
+    //----------------------------------------------------------   FORM FUNCTIONS, VALUES  ----------------------------------------------------------
     const auth = useAuth();
     const [formValues, setFormValues] = useState({
         email: '',
@@ -57,6 +60,7 @@ function SignedInHTML({user}) {
     });
     const [formFields, setFormFields] = useState([]);
     const [sheet, setSheet] = useState(false);
+    const [emailButton, setEmailButton] = useState(false);
     const [templateStatus, setTemplate] = useState('template');
 
     const handleFormChange = (event) => {
@@ -77,7 +81,9 @@ function SignedInHTML({user}) {
         setFormFields(updatedFormField);
     }
 
-    // Handle checkbox change
+    const handleEmailButtonChange = (event) => {
+        setEmailButton(true);
+    };
     const handleSheetChange = (event) => {
         setSheet(event.target.checked);
     };
@@ -92,6 +98,7 @@ function SignedInHTML({user}) {
 
     const [buttonText, setButtonText] = useState('send !!!');
 
+    //----------------------------------------------------------   FUNCTIONS FOR SENDING EMAILS  ----------------------------------------------------------
     async function getSheet() {
         try {
             //look for spreadsheet id
@@ -172,17 +179,17 @@ function SignedInHTML({user}) {
 
                             const textFieldMatches = [...fragment.matchAll(/\\(.*?)\\/g)]; //look for backslashes
                             //if there are backslash matches
-                            if (textFieldMatches.length != 0){
+                            if (textFieldMatches.length != 0) {
 
                                 //slice up text into pieces with matches or plaintext, add matches
                                 let currentString = fragment;
                                 let currentIndex = 0;
                                 let fragmentParts = [];
-                                
+
                                 textFieldMatches.forEach(match => {
                                     const beforeMatch = currentString.slice(currentIndex, match.index);
-                                    if(beforeMatch) fragmentParts.push({type: 'text', value: beforeMatch});
-                                    fragmentParts.push({type: 'match', value: match[1] });
+                                    if (beforeMatch) fragmentParts.push({type: 'text', value: beforeMatch});
+                                    fragmentParts.push({type: 'match', value: match[1]});
                                     currentIndex = match.index + match[0].length;
                                     addFormField(match[1]);
                                 })
@@ -264,7 +271,7 @@ function SignedInHTML({user}) {
                 "Content-Type: text/html; charset=UTF-8 \r\n" +
                 "To: " + toEmail + "\r\n" +
                 "Subject: " + formValues.subject + "\r\n\r\n";
-            
+
             //add custom data
             for (let i = 0; i < messageArr.length - 1; i++) {
                 message += messageArr[i];
@@ -272,7 +279,7 @@ function SignedInHTML({user}) {
             }
 
             //add last message part
-            message += messageArr[messageArr.length-1];
+            message += messageArr[messageArr.length - 1];
 
             console.log(message);
         }
@@ -292,7 +299,7 @@ function SignedInHTML({user}) {
             };
             const response = await fetch('https://sendemail-niisnxz5da-uc.a.run.app', { //for deployed app
 
-            // const response = await fetch('http://127.0.0.1:5001/mail-maker-1b4d9/us-central1/sendEmail', {   //for debug on local side
+                // const response = await fetch('http://127.0.0.1:5001/mail-maker-1b4d9/us-central1/sendEmail', {   //for debug on local side
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -310,6 +317,36 @@ function SignedInHTML({user}) {
             }
         } catch (error) {
             console.error('Error calling Firebase function:', error);
+        }
+    };
+
+
+    //----------------------------------------------------------   FUNCTIONS FOR SAVED TEMPLATES  ----------------------------------------------------------
+
+    // Helper function to upload JSON
+    const uploadJSONToStorage = (storage, jsonObject, key) => {
+        const storageRef = ref(storage, `savedTemplates/${key}.json`);
+        const jsonData = JSON.stringify(jsonObject);
+
+        const blob = new Blob([jsonData], {type: 'application/json'});
+        uploadBytes(storageRef, blob).then((snapshot) => {
+            console.log('Uploaded JSON to Firebase Storage!');
+        }).catch((error) => {
+            console.error('Error uploading JSON:', error);
+        });
+    };
+
+    // Function to retrieve JSON from Firebase Storage
+    const retrieveJSONFromStorage = async (storage, key) => {
+        const storageRef = ref(storage, `savedTemplates/${key}.json`);
+        const url = await getDownloadURL(storageRef);
+        try {
+            const response = await fetch(url);
+            const data = await response.json();
+            return data;
+        } catch (error) {
+            console.error('Error fetching JSON:', error);
+            return null;
         }
     };
 
@@ -342,8 +379,39 @@ function SignedInHTML({user}) {
         savedTemplates.push(savedTemplate);
         localStorage.setItem("savedTemplates", JSON.stringify(savedTemplates));
         console.log(savedTemplates);
+        uploadJSONToStorage(storage, JSON.stringify(savedTemplates), 'savedTemplates');
     }
 
+    const loadTemplates = async () => {
+        await retrieveJSONFromStorage(storage, 'savedTemplates')
+            .then((savedTemplates) => {
+                if (savedTemplates) {
+                    localStorage.setItem("savedTemplates", savedTemplates);
+                    console.log(savedTemplates);
+                } else {
+                    // add blank template if first time user (no saved templates)
+                    const blankTemplate = {
+                        email: "",
+                        sheet: "",
+                        range: "",
+                        subject: "",
+                        templateStatus: "template",
+                        templateLink: "",
+                        templateName: "New template",
+                    };
+                    let templates = [];
+                    templates.push(blankTemplate);
+                    uploadJSONToStorage(storage, JSON.stringify(templates), 'savedTemplates');
+                    localStorage.setItem("savedTemplates", templates);
+                    console.log(templates);
+                }
+            });
+    }
+
+    loadTemplates();
+
+
+    //----------------------------------------------------------   HTML/CSS  ----------------------------------------------------------
     return <div>
         <nav>
             <div class="navitems">
@@ -359,126 +427,39 @@ function SignedInHTML({user}) {
         <br /><br />
         <h2>draft your email here !!</h2>
         <br />
-        <div class="emailBox">
-            <p>1. Add your recipients or link a public google email sheet below!</p>
-            <Box //for email line
-                component="form"
-                sx={{display: 'flex', flexDirection: 'row', '& > :not(style)': {m: 1, width: '25ch'}, alignItems: 'center', justifyContent: 'space-between'}}
-                noValidate
-                autoComplete="off"
-            >
-                <TextInput
-                    name="email"
-                    label="email"
-                    id="outlined"
-                    value={formValues.email}
-                    onChange={handleFormChange}
-                />
-                <FormGroup>
-                    <FormControlLabel control={
-                        <Checkbox
-                            onChange={handleSheetChange}
-                            sx={{color: '#A0AAB4', '& .MuiCheckbox-root': {borderColor: '#cad2c5'}, '&.Mui-checked': {color: '#cad2c5'}}}
-                        />}
-                        label="Google Sheet"
-                        sx={{display: 'flex', justifyContent: 'center', }}
-                    />
-                </FormGroup>
-            </Box>
-            {sheet && (
-                <Box  //for body
+        {!emailButton &&
+            <IconButton sx={{backgroundColor: '#354f52', color: 'white', }} aria-label="add" onClick={handleEmailButtonChange}>
+                <AddIcon />
+            </IconButton>
+        }
+        {emailButton &&
+            <div class="emailBox">
+                <p>1. Add your recipients or link a public google email sheet below!</p>
+                <Box //for email line
                     component="form"
-                    sx={{'& > :not(style)': {m: 1, width: '52ch'}}}
+                    sx={{display: 'flex', flexDirection: 'row', '& > :not(style)': {m: 1, width: '25ch'}, alignItems: 'center', justifyContent: 'space-between'}}
                     noValidate
                     autoComplete="off"
                 >
                     <TextInput
-                        name="range"
-                        label="Range (e.g. A1:A2)"
+                        name="email"
+                        label="email"
                         id="outlined"
-                        value={formValues.range}
+                        value={formValues.email}
                         onChange={handleFormChange}
                     />
-                </Box>
-            )}
-            <Box //for subject line
-                component="form"
-                sx={{'& > :not(style)': {m: 1, width: '52ch'}}}
-                noValidate
-                autoComplete="off"
-            >
-                <TextInput
-                    name="subject"
-                    label="subject"
-                    id="outlined"
-                    value={formValues.subject}
-                    onChange={handleFormChange}
-                />
-            </Box>
-            <p>2. Upload a template or fill out the body!</p>
-
-            <ToggleButtonGroup
-                value={templateStatus}
-                exclusive
-                onChange={handleTemplateChange}
-                variant="outlined"
-                sx={{'& .MuiToggleButton-root': {color: '#A0AAB4', borderColor: '#cad2c5'}, '& .MuiToggleButton-root.Mui-selected': {color: 'white', borderColor: 'white'}}}
-            >
-                <ToggleButton value="template">Use template</ToggleButton>
-                <ToggleButton value="write">Write yourself</ToggleButton>
-            </ToggleButtonGroup>
-            {templateStatus == "template" && ( //template selected
-                <form onSubmit={handleSubmit}>
-                    <br />
-                    <p>Add a link to a template document! (doesn't need to be public)</p>
-                    <Box
-                        component="form"
-                        sx={{'& > :not(style)': {m: 1, width: '25ch'}}}
-                        noValidate
-                        autoComplete="off"
-                    >
-                        <TextInput
-                            name="templateLink"
-                            label="Template Link"
-                            id="outlined"
-                            value={formValues.templateLink}
-                            onChange={handleFormChange}
+                    <FormGroup>
+                        <FormControlLabel control={
+                            <Checkbox
+                                onChange={handleSheetChange}
+                                sx={{color: '#A0AAB4', '& .MuiCheckbox-root': {borderColor: '#cad2c5'}, '&.Mui-checked': {color: '#cad2c5'}}}
+                            />}
+                            label="Google Sheet"
+                            sx={{display: 'flex', justifyContent: 'center', }}
                         />
-                        <button type="button" onClick={async () => {await getTemplate();}} style={{width:'10ch', marginLeft:"3ch", marginTop:"1.5ch"}}>Load!</button>
-                    </Box>
-                    {formFields.length != 0 && (
-                        <Box
-                            component="form"
-                            sx={{display: 'flex', flexDirection: 'row', '& > :not(style)': {m: 1, width: '25ch'}, alignItems: 'center', justifyContent: 'space-between'}}
-                            noValidate
-                            autoComplete="off"
-                        >
-                            <p>Input fields detected!</p>
-                            <Box
-                                component="form"
-                                sx={{'& > :not(style)': {display: 'flex', flexDirection: 'column', m: 2, width: '25ch'}}}
-                                noValidate
-                                autoComplete="off"
-                            >
-                                {formFields.map((formField) => (
-                                    <TextInput
-                                        key={formField.id}
-                                        name={formField.id}
-                                        label = {formField.label}
-                                        id="outlined"
-                                        value={formField.value}
-                                        onChange={(event) => handleFormFieldChange(formField.id, event)}
-                                    />
-                                ))}
-                            </Box>
-                        </Box>
-                    )}
-                </form>
-            )}
-            {templateStatus == "write" && ( //user chooses to write email
-                <form onSubmit={handleSubmit}>
-                    <br />
-                    <p>Draft email below!</p>
+                    </FormGroup>
+                </Box>
+                {sheet && (
                     <Box  //for body
                         component="form"
                         sx={{'& > :not(style)': {m: 1, width: '52ch'}}}
@@ -486,37 +467,131 @@ function SignedInHTML({user}) {
                         autoComplete="off"
                     >
                         <TextInput
-                            name="body"
-                            id="outlined-multiline-static"
-                            label="body"
-                            multiline
-                            rows={4}
+                            name="range"
+                            label="Range (e.g. A1:A2)"
+                            id="outlined"
+                            value={formValues.range}
                             onChange={handleFormChange}
                         />
                     </Box>
-                </form>
-            )}
-            <br />
-            <p>3. send !!</p>
-            <button onClick={sendEmail}>{buttonText}</button>
-            <br /><br />
-            <p>Save template?</p>
-            <Box
-                component="form"
-                sx={{'& > :not(style)': {m: 1, width: '25ch'}}}
-                noValidate
-                autoComplete="off"
-            >
-                <TextInput
-                    name="templateName"
-                    label="Template Name"
-                    id="outlined"
-                    value={formValues.templateName}
-                    onChange={handleFormChange}
-                />
-                <button type="button" onClick={saveTemplate} style={{width:'10ch', marginLeft:"3ch", marginTop:"1.5ch"}}>Save!</button>
-            </Box>
-        </div>
+                )}
+                <Box //for subject line
+                    component="form"
+                    sx={{'& > :not(style)': {m: 1, width: '52ch'}}}
+                    noValidate
+                    autoComplete="off"
+                >
+                    <TextInput
+                        name="subject"
+                        label="subject"
+                        id="outlined"
+                        value={formValues.subject}
+                        onChange={handleFormChange}
+                    />
+                </Box>
+                <p>2. Upload a template or fill out the body!</p>
+
+                <ToggleButtonGroup
+                    value={templateStatus}
+                    exclusive
+                    onChange={handleTemplateChange}
+                    variant="outlined"
+                    sx={{'& .MuiToggleButton-root': {color: '#A0AAB4', borderColor: '#cad2c5'}, '& .MuiToggleButton-root.Mui-selected': {color: 'white', borderColor: 'white'}}}
+                >
+                    <ToggleButton value="template">Use template</ToggleButton>
+                    <ToggleButton value="write">Write yourself</ToggleButton>
+                </ToggleButtonGroup>
+                {templateStatus == "template" && ( //template selected
+                    <form onSubmit={handleSubmit}>
+                        <br />
+                        <p>Add a link to a template document! (doesn't need to be public)</p>
+                        <Box
+                            component="form"
+                            sx={{'& > :not(style)': {m: 1, width: '25ch'}}}
+                            noValidate
+                            autoComplete="off"
+                        >
+                            <TextInput
+                                name="templateLink"
+                                label="Template Link"
+                                id="outlined"
+                                value={formValues.templateLink}
+                                onChange={handleFormChange}
+                            />
+                            <button type="button" onClick={async () => {await getTemplate();}} style={{width: '10ch', marginLeft: "3ch", marginTop: "1.5ch"}}>Load!</button>
+                        </Box>
+                        {formFields.length != 0 && (
+                            <Box
+                                component="form"
+                                sx={{display: 'flex', flexDirection: 'row', '& > :not(style)': {m: 1, width: '25ch'}, alignItems: 'center', justifyContent: 'space-between'}}
+                                noValidate
+                                autoComplete="off"
+                            >
+                                <p>Input fields detected!</p>
+                                <Box
+                                    component="form"
+                                    sx={{'& > :not(style)': {display: 'flex', flexDirection: 'column', m: 2, width: '25ch'}}}
+                                    noValidate
+                                    autoComplete="off"
+                                >
+                                    {formFields.map((formField) => (
+                                        <TextInput
+                                            key={formField.id}
+                                            name={formField.id}
+                                            label={formField.label}
+                                            id="outlined"
+                                            value={formField.value}
+                                            onChange={(event) => handleFormFieldChange(formField.id, event)}
+                                        />
+                                    ))}
+                                </Box>
+                            </Box>
+                        )}
+                    </form>
+                )}
+                {templateStatus == "write" && ( //user chooses to write email
+                    <form onSubmit={handleSubmit}>
+                        <br />
+                        <p>Draft email below!</p>
+                        <Box  //for body
+                            component="form"
+                            sx={{'& > :not(style)': {m: 1, width: '52ch'}}}
+                            noValidate
+                            autoComplete="off"
+                        >
+                            <TextInput
+                                name="body"
+                                id="outlined-multiline-static"
+                                label="body"
+                                multiline
+                                rows={4}
+                                onChange={handleFormChange}
+                            />
+                        </Box>
+                    </form>
+                )}
+                <br />
+                <p>3. send !!</p>
+                <button onClick={sendEmail}>{buttonText}</button>
+                <br /><br />
+                <p>Save template?</p>
+                <Box
+                    component="form"
+                    sx={{'& > :not(style)': {m: 1, width: '25ch'}}}
+                    noValidate
+                    autoComplete="off"
+                >
+                    <TextInput
+                        name="templateName"
+                        label="Template Name"
+                        id="outlined"
+                        value={formValues.templateName}
+                        onChange={handleFormChange}
+                    />
+                    <button type="button" onClick={saveTemplate} style={{width: '10ch', marginLeft: "3ch", marginTop: "1.5ch"}}>Save!</button>
+                </Box>
+            </div>
+        }
         <br /><br />
         <button onClick={() => signOut(auth)} class="signOutButton">sign out !!</button>
     </div>
