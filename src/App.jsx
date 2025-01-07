@@ -1,19 +1,20 @@
 "use strict";
 import {useState, useEffect} from 'react'
-import './App.css'
+import './index.css'
 import Box from '@mui/material/Box';
 import ToggleButton from '@mui/material/ToggleButton';
 import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
 import TextField from '@mui/material/TextField';
+import Button from '@mui/material/Button';
+import ButtonGroup from '@mui/material/ButtonGroup';
 import {Checkbox, FormControlLabel, FormGroup, inputClasses} from '@mui/material';
 import {useAuth, useSigninCheck, FirebaseAppProvider, FirestoreProvider, useFirestoreDocData, useFirestore, useFirebaseApp, AuthProvider, useStorage} from 'reactfire';
 import {getAuth} from 'firebase/auth';
 import {GoogleAuthProvider, signInWithPopup} from "firebase/auth";
-import {ref, uploadBytesResumable, getDownloadURL} from 'firebase/storage';
-import {IconButton} from '@mui/material';
+import {doc, getFirestore, updateDoc, setDoc, connectFirestoreEmulator} from 'firebase/firestore';
 import AddIcon from '@mui/icons-material/Add';
 
-const signOut = auth => auth.signOut().then(() => console.log('signed out'));
+const signOut = auth => auth.signOut().then(() => console.log('signed out')).then(localStorage.removeItem("savedTemplates"));
 const signIn = async auth => {
     const provider = new GoogleAuthProvider();
     provider.addScope('https://www.googleapis.com/auth/gmail.send');
@@ -26,6 +27,7 @@ const signIn = async auth => {
 
 function Auth() {
     const {status, data: signinResult} = useSigninCheck();
+    const db = useFirestore();
 
     if (status === 'loading') {
         return <p>loading !!!</p>;
@@ -33,23 +35,27 @@ function Auth() {
 
     const {signedIn, user} = signinResult;
     if (signedIn) {
-        return (<SignedInHTML user={user} />);
+        return (<SignedInHTML user={user} db={db} />);
     } else return (<SignedOutHTML />);
 }
 
 function App() {
     const firebaseApp = useFirebaseApp();
     const auth = getAuth(firebaseApp);
+    const firestoreInstance = getFirestore(firebaseApp);
     return (
         <AuthProvider sdk={auth}>
-            <Auth />
+            <FirestoreProvider sdk={firestoreInstance}>
+                <Auth />
+            </FirestoreProvider>
         </AuthProvider>
     )
 }
 
-function SignedInHTML({user}) {
+function SignedInHTML({user, db}) {
     //----------------------------------------------------------   FORM FUNCTIONS, VALUES  ----------------------------------------------------------
     const auth = useAuth();
+
     const [formValues, setFormValues] = useState({
         email: '',
         subject: '',
@@ -60,8 +66,8 @@ function SignedInHTML({user}) {
     });
     const [formFields, setFormFields] = useState([]);
     const [sheet, setSheet] = useState(false);
-    const [emailButton, setEmailButton] = useState(false);
     const [templateStatus, setTemplate] = useState('template');
+    const [currentTemplate, setCurrentTemplate] = useState(null);
 
     const handleFormChange = (event) => {
         const {name, value} = event.target;
@@ -81,9 +87,6 @@ function SignedInHTML({user}) {
         setFormFields(updatedFormField);
     }
 
-    const handleEmailButtonChange = (event) => {
-        setEmailButton(true);
-    };
     const handleSheetChange = (event) => {
         setSheet(event.target.checked);
     };
@@ -322,96 +325,103 @@ function SignedInHTML({user}) {
 
 
     //----------------------------------------------------------   FUNCTIONS FOR SAVED TEMPLATES  ----------------------------------------------------------
-
-    // Helper function to upload JSON
-    const uploadJSONToStorage = (storage, jsonObject, key) => {
-        const storageRef = ref(storage, `savedTemplates/${key}.json`);
-        const jsonData = JSON.stringify(jsonObject);
-
-        const blob = new Blob([jsonData], {type: 'application/json'});
-        uploadBytes(storageRef, blob).then((snapshot) => {
-            console.log('Uploaded JSON to Firebase Storage!');
-        }).catch((error) => {
-            console.error('Error uploading JSON:', error);
-        });
-    };
-
-    // Function to retrieve JSON from Firebase Storage
-    const retrieveJSONFromStorage = async (storage, key) => {
-        const storageRef = ref(storage, `savedTemplates/${key}.json`);
-        const url = await getDownloadURL(storageRef);
-        try {
-            const response = await fetch(url);
-            const data = await response.json();
-            return data;
-        } catch (error) {
-            console.error('Error fetching JSON:', error);
-            return null;
-        }
-    };
+    const userRef = doc(db, 'users', user.uid);
+    const {data} = useFirestoreDocData(userRef);
+    if (!data) {
+        console.log("Creating new document...");
+        setDoc(userRef, {});
+    }
 
     const saveTemplate = async () => {
-        let savedTemplates = JSON.parse(localStorage.getItem("savedTemplates")) || [];
-        let template;
-        if (templateStatus == "template") {
-            template = {
-                email: formValues.email,
-                sheet: sheet,
-                range: formValues.range,
-                subject: formValues.subject,
-                templateStatus: "template",
-                templateLink: formValues.templateLink,
-                templateName: formValues.templateName,
-            };
-        }
-        else {
-            template = {
-                email: formValues.email,
-                sheet: sheet,
-                range: formValues.range,
-                subject: formValues.subject,
-                templateStatus: templateStatus,
-                templateLink: formValues.templateLink,
-                templateName: formValues.templateName,
-            };
-        }
-        const savedTemplate = JSON.stringify(template);
-        savedTemplates.push(savedTemplate);
+        //save to local storage
+        let savedTemplates = JSON.parse(localStorage.getItem("savedTemplates"));
+
+        const template = {
+            email: formValues.email,
+            sheet: sheet,
+            range: formValues.range,
+            subject: formValues.subject,
+            templateStatus: templateStatus,
+            templateLink: formValues.templateLink,
+            templateName: formValues.templateName,
+        };
+
+        //search if template already exists
+        const templateIndex = savedTemplates.findIndex(temp => temp.templateName == formValues.templateName)
+
+        //modify existing template
+        if (templateIndex != -1) savedTemplates[templateIndex] = template;
+
+        //otherwise add current template
+        else savedTemplates.push(template);
+
         localStorage.setItem("savedTemplates", JSON.stringify(savedTemplates));
-        console.log(savedTemplates);
-        uploadJSONToStorage(storage, JSON.stringify(savedTemplates), 'savedTemplates');
+        console.log("New templates: ", localStorage.getItem("savedTemplates"))
+        await pushTemplates();
     }
 
     const loadTemplates = async () => {
-        await retrieveJSONFromStorage(storage, 'savedTemplates')
-            .then((savedTemplates) => {
-                if (savedTemplates) {
-                    localStorage.setItem("savedTemplates", savedTemplates);
-                    console.log(savedTemplates);
-                } else {
-                    // add blank template if first time user (no saved templates)
-                    const blankTemplate = {
-                        email: "",
-                        sheet: "",
-                        range: "",
-                        subject: "",
-                        templateStatus: "template",
-                        templateLink: "",
-                        templateName: "New template",
-                    };
-                    let templates = [];
-                    templates.push(blankTemplate);
-                    uploadJSONToStorage(storage, JSON.stringify(templates), 'savedTemplates');
-                    localStorage.setItem("savedTemplates", templates);
-                    console.log(templates);
-                }
+        try {
+            if (data.templates != null) {
+                console.log('Received templates:', data.templates);
+                localStorage.setItem("savedTemplates", data.templates);
+            } else {
+                console.log('new user');
+                localStorage.removeItem("savedTemplates");
+                const blankTemplate = {
+                    email: "",
+                    sheet: false,
+                    range: "",
+                    subject: "",
+                    templateStatus: "template",
+                    templateLink: "",
+                    templateName: "Template name",
+                };
+                let templates = [];
+                templates.push(blankTemplate);
+                localStorage.setItem("savedTemplates", JSON.stringify(templates));
+                await pushTemplates();
+                console.log(templates);
+            }
+        } catch (error) {
+            console.error('error calling firestore:', error);
+        };
+    }
+    //save to cloud storage
+    const pushTemplates = async () => {
+        try {
+            await updateDoc(userRef, {
+                templates: localStorage.getItem("savedTemplates"),
             });
+            console.log('JSON data stored successfully!');
+            //localStorage.removeItem("savedTemplates");
+        } catch (error) {
+            console.error('Error storing data:', error);
+        };
     }
 
-    loadTemplates();
+    const openTemplate = (event, selectedTemplateName) => {
+        const newTemplate = JSON.parse(localStorage.getItem("savedTemplates")).find(template => template.templateName == selectedTemplateName);
+        setCurrentTemplate(newTemplate);
+        setSheet(newTemplate.sheet)
+        setTemplate(newTemplate.templateStatus);
+        Object.assign(formValues, newTemplate);
+    };
 
+    const removeTemplate = (event, selectedTemplateName) => {
+        const selectedTemplate = JSON.parse(localStorage.getItem("savedTemplates")).find(template => template.templateName == selectedTemplateName);
+        setCurrentTemplate(null);
+        let savedTemplates = JSON.parse(localStorage.getItem("savedTemplates"));
+        savedTemplates = savedTemplates.filter(template => template.templateName != selectedTemplate.templateName);
+        localStorage.setItem("savedTemplates", JSON.stringify(savedTemplates));
+        pushTemplates();
+    };
+    //load templates as soon as signin
+    useEffect(() => {
+        if (!user || !localStorage.savedTemplates) loadTemplates();
+    }, [signIn, user])
 
-    //----------------------------------------------------------   HTML/CSS  ----------------------------------------------------------
+    //----------------------------------------------------------   SIGNED IN HTML/CSS  ----------------------------------------------------------
     return <div>
         <nav>
             <div class="navitems">
@@ -425,14 +435,32 @@ function SignedInHTML({user}) {
             </div>
         </nav>
         <br /><br />
-        <h2>draft your email here !!</h2>
+        <h1>draft your email here !!</h1>
         <br />
-        {!emailButton &&
-            <IconButton sx={{backgroundColor: '#354f52', color: 'white', }} aria-label="add" onClick={handleEmailButtonChange}>
-                <AddIcon />
-            </IconButton>
-        }
-        {emailButton &&
+        <p>Your saved templates:</p>
+        <div>
+            {localStorage.getItem("savedTemplates") &&
+                <ButtonGroup 
+                    variant="outlined" 
+                    aria-label="Templates"
+                    sx = {{}}
+                >
+                    {JSON.parse(localStorage.getItem("savedTemplates")).filter(template => template.templateName != "Template name").map((template, index) => (
+                        <Button
+                            key={index}
+                            onClick={(event) => openTemplate(event, template.templateName)}
+                        >
+                            {template.templateName}
+                        </Button>
+                    ))}
+                    <Button aria-label="add" onClick={(event) => openTemplate(event, "Template name")}>
+                        <AddIcon />
+                    </Button>
+                </ButtonGroup>
+            }
+        </div>
+        <br /><br />
+        {currentTemplate &&
             <div class="emailBox">
                 <p>1. Add your recipients or link a public google email sheet below!</p>
                 <Box //for email line
@@ -590,6 +618,8 @@ function SignedInHTML({user}) {
                     />
                     <button type="button" onClick={saveTemplate} style={{width: '10ch', marginLeft: "3ch", marginTop: "1.5ch"}}>Save!</button>
                 </Box>
+                <br /><br />
+                <button onClick={(event) => removeTemplate(event, currentTemplate.templateName)} class="signOutButton">Remove template</button>
             </div>
         }
         <br /><br />
@@ -597,6 +627,8 @@ function SignedInHTML({user}) {
     </div>
 }
 
+
+//----------------------------------------------------------   SIGNED OUT HTML/CSS  ----------------------------------------------------------
 function SignedOutHTML() {
     const auth = useAuth();
     return <div>
@@ -614,7 +646,7 @@ function SignedOutHTML() {
 
 export default App;
 
-
+//----------------------------------------------------------   CUSTOM TEXT INPUT  ----------------------------------------------------------
 function TextInput({name, label, id, value, onChange, multiline = false, rows = 4}) {
     return (
         <TextField

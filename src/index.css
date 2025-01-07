@@ -1,11 +1,21 @@
+html {
+    height: 100%;
+}
+#root {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 2rem;
+    text-align: center;
+}
 :root {
+    background-attachment: fixed;
+    height: 100%;
     font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
     line-height: 1.5;
     font-weight: 400;
 
     color-scheme: light dark;
-    color: cad2c5;
-    background-color: #2f3e46;
+    color: #cad2c5;
 
     font-synthesis: none;
     text-rendering: optimizeLegibility;
@@ -13,11 +23,42 @@
     -moz-osx-font-smoothing: grayscale;
 }
 
+@media (prefers-color-scheme: dark) {
+    h1 {
+        background: linear-gradient(45deg, #b08cf8ff, #9e97ffff, #51b4fcff);
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    :root {
+        background-image: linear-gradient(45deg, #4c5568ff, #5a445cff);
+    }
+
+    .signOutButton {
+        background-color: #7f6d97ff;
+    }
+
+    .navitems {
+        background-image: linear-gradient(90deg, #d378c7ff, #a270d1ff, #4aadd1ff);
+        color: white;
+    }
+
+    .MuiButton-root {
+        background-color: '#7f6d97ff';
+        color: 'white';
+    }
+
+    .signInButton {
+        background-color: #7f6d97ff;
+    }
+}
+
 a {
     font-weight: 500;
     color: #646cff;
     text-decoration: inherit;
 }
+
 a:hover {
     color: #535bf2;
 }
@@ -30,11 +71,6 @@ body {
     min-height: 70vh;
 }
 
-h1 {
-    font-size: 3.2em;
-    line-height: 1.1;
-}
-
 button {
     border-radius: 8px;
     border: 1px solid transparent;
@@ -42,13 +78,14 @@ button {
     font-size: 1em;
     font-weight: 500;
     font-family: inherit;
-    background-color: #2f3e46;
     cursor: pointer;
     transition: border-color 0.25s;
 }
+
 button:hover {
     border-color: #cad2c5;
 }
+
 button:focus,
 button:focus-visible {
     outline: 4px auto -webkit-focus-ring-color;
@@ -72,22 +109,24 @@ nav {
 .navitems {
     display: flex;
     justify-content: space-between;
-    align-items:center;
+    align-items: center;
     padding-left: 50px;
     padding-right: 50px;
     padding-top: 10px;
     padding-bottom: 10px;
-    background-color: #354f52;
 }
+
 .left {
-    align-items:left;
+    align-items: left;
 }
+
 .right {
     display: flex;
     justify-content: space-between;
     padding-left: 50px;
     align-items: right;
 }
+
 .rightitem {
     padding-right: 50px;
 }
@@ -96,13 +135,5 @@ nav {
     border-radius: 8px;
     border: 1px solid transparent;
     padding: 2em;
-    background-color: #354f52;
-}
-
-.signOutButton {
-    background-color: #9e2a2b;
-}
-
-.signInButton {
     background-color: #354f52;
 }
