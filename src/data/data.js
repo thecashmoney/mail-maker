@@ -1,5 +1,7 @@
 import {setDoc} from 'firebase/firestore';
 
+//----------------------------------------------------------   FUNCTIONS FOR SENDING EMAILS  ----------------------------------------------------------
+
 export async function getSheet(formValues, user) {
     try {
         //look for spreadsheet id
@@ -48,9 +50,6 @@ export async function getSheet(formValues, user) {
         return "";
     }
 }
-
-
-//----------------------------------------------------------   FUNCTIONS FOR SENDING EMAILS  ----------------------------------------------------------
 
 export async function getTemplate(formValues, addFormField, setLoadedTemplates) {
     try {
@@ -224,6 +223,8 @@ export const sendEmail = async (formValues, sheet, templateStatus, formFields, l
         return false;
     }
 };
+
+//----------------------------------------------------------   FUNCTIONS FOR SAVED TEMPLATES  ----------------------------------------------------------
 
 export const saveTemplate = async (formValues, sheet, templateStatus, userRef, loadedTemplates, setLoadedTemplates) => {
     const template = {

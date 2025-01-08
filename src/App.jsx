@@ -25,6 +25,7 @@ const signIn = async auth => {
     signInWithPopup(auth, provider).then((result) => {
         const credential = GoogleAuthProvider.credentialFromResult(result);
         localStorage.setItem("token", credential.accessToken);
+        location.reload();
     });
 }
 
@@ -79,7 +80,7 @@ function SignedInHTML({user}) {
             loadTemplates(data, userRef, setLoadedTemplates);
         }
     }, [signIn, user, status])
-    
+
     //----------------------------------------------------------   SIGNED IN HTML/CSS  ----------------------------------------------------------
     return <div>
         <nav>
