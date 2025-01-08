@@ -232,6 +232,7 @@ export const saveTemplate = async (formValues, sheet, templateStatus, userRef, l
         sheet: sheet,
         range: formValues.range,
         subject: formValues.subject,
+        body: formValues.body,
         templateStatus: templateStatus,
         templateLink: formValues.templateLink,
         templateName: formValues.templateName,
@@ -268,6 +269,7 @@ export const loadTemplates = async (data, userRef, setLoadedTemplates) => {
                 sheet: false,
                 range: "",
                 subject: "",
+                body: "",
                 templateStatus: "template",
                 templateLink: "",
                 templateName: "Template name",
@@ -299,6 +301,7 @@ export const openTemplate = (event, selectedTemplateName, setCurrentTemplate, se
     setSheet(newTemplate.sheet)
     setTemplate(newTemplate.templateStatus);
     Object.assign(formValues, newTemplate);
+    console.log(formValues);
 };
 
 export const removeTemplate = (event, selectedTemplateName, setCurrentTemplate, userRef, loadedTemplates, setLoadedTemplates) => {

@@ -249,6 +249,7 @@ function SignedInHTML({user}) {
                                 name="body"
                                 id="outlined-multiline-static"
                                 label="body"
+                                value={formValues.body}
                                 multiline
                                 rows={4}
                                 onChange={handleFormChange}
