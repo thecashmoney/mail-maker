@@ -78,6 +78,7 @@ html {
     input, label, label.Mui-focused {
         color: white !important;
     }
+    .MuiOutlinedInput-root 
     /* 
     '& .MuiInput-underline:after': {
         borderBottomColor: '#B2BAC2',
@@ -91,9 +92,6 @@ html {
         },
         '&.Mui-focused fieldset': {
             borderColor: '#6F7E8C',
-        },
-        '& textarea': {
-            color: '#cad2c5', // Change text color inside the textarea
         },
     }, */
 
