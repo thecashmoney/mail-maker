@@ -70,5 +70,13 @@ export const useStore = create((set) => ({
         set ({
             templateStatus: newTemplateStatus
         })
+    },
+    resetStore: () => {
+        set({
+            formFields: [],
+            sheet: false,
+            templateStatus: "template",
+            buttonText: "send !!!"
+        })
     }
 }))

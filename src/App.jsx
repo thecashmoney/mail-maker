@@ -59,7 +59,7 @@ function SignedInHTML({user}) {
     //----------------------------------------------------------   FORM FUNCTIONS, VALUES  ----------------------------------------------------------
     const auth = useAuth();
 
-    const { formValues, formFields, sheet, templateStatus, currentTemplate, buttonText, handleFormChange, addFormField, handleFormFieldChange, handleSheetChange, handleTemplateChange, setTemplateStatus, setCurrentTemplate, setButtonText, setSheet, loadedTemplates, setLoadedTemplates} = useStore();
+    const { formValues, formFields, sheet, templateStatus, currentTemplate, buttonText, handleFormChange, addFormField, handleFormFieldChange, handleSheetChange, handleTemplateChange, setTemplateStatus, setCurrentTemplate, setButtonText, setSheet, loadedTemplates, setLoadedTemplates, resetStore} = useStore();
 
 
     const handleSubmit = (event) => {
@@ -80,10 +80,6 @@ function SignedInHTML({user}) {
             loadTemplates(data, userRef, setLoadedTemplates);
         }
     }, [signIn, user, status])
-
-    useEffect(() => {
-        console.log(loadedTemplates);
-    }, [loadedTemplates])
 
     //----------------------------------------------------------   SIGNED IN HTML/CSS  ----------------------------------------------------------
     return <div>
@@ -111,12 +107,12 @@ function SignedInHTML({user}) {
                 {loadedTemplates.filter(template => template.templateName != "Template name").map((template, index) => (
                     <Button
                         key={index}
-                        onClick={(event) => openTemplate(event, template.templateName, setCurrentTemplate, setSheet, setTemplateStatus, formValues, loadedTemplates)}
+                        onClick={(event) => openTemplate(event, template.templateName, setCurrentTemplate, setSheet, setTemplateStatus, formValues, loadedTemplates, resetStore)}
                     >
                         {template.templateName}
                     </Button>
                 ))}
-                <Button aria-label="add" onClick={(event) => openTemplate(event, "Template name", setCurrentTemplate, setSheet, setTemplateStatus, formValues, loadedTemplates)}>
+                <Button aria-label="add" onClick={(event) => openTemplate(event, "Template name", setCurrentTemplate, setSheet, setTemplateStatus, formValues, loadedTemplates, resetStore)}>
                     <AddIcon />
                 </Button>
             </ButtonGroup>

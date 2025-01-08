@@ -146,7 +146,7 @@ export async function getTemplate(formValues, addFormField) {
             }
         });
         messageArr.push(message);
-        localStorage.setItem("messageArr", messageArr);
+        localStorage.setItem("messageArr", JSON.stringify(messageArr));
     }
     catch {
         console.error("Error reading template:");
@@ -165,7 +165,7 @@ export const sendEmail = async (formValues, sheet, templateStatus, formFields, u
     }
     let message;
     if (templateStatus == "template") {
-        const messageArr = localStorage.getItem("messageArr");
+        const messageArr = JSON.parse(localStorage.getItem("messageArr"));
         console.log(messageArr);
 
         //create basic message
@@ -295,10 +295,11 @@ const pushTemplates = async (userRef, loadedTemplates) => {
     };
 }
 
-export const openTemplate = (event, selectedTemplateName, setCurrentTemplate, setSheet, setTemplate, formValues, loadedTemplates) => {
+export const openTemplate = (event, selectedTemplateName, setCurrentTemplate, setSheet, setTemplate, formValues, loadedTemplates, resetStore) => {
     const newTemplate = loadedTemplates.find(template => template.templateName == selectedTemplateName);
+    resetStore();
     setCurrentTemplate(newTemplate);
-    setSheet(newTemplate.sheet)
+    setSheet(newTemplate.sheet);
     setTemplate(newTemplate.templateStatus);
     Object.assign(formValues, newTemplate);
 };
