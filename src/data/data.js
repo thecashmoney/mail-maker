@@ -239,19 +239,21 @@ export const saveTemplate = async (formValues, sheet, templateStatus, userRef, l
 
     //search if template already exists
     const templateIndex = loadedTemplates.findIndex(temp => temp.templateName == formValues.templateName)
-
+    let newLoadedTemplates = loadedTemplates;
     //modify existing template
     if (templateIndex != -1) {
-        loadedTemplates[templateIndex] = template;
-        setLoadedTemplates(loadedTemplates);
+        newLoadedTemplates[templateIndex] = template;
+        setLoadedTemplates(newLoadedTemplates);
     }
 
     //otherwise add current template
-    else setLoadedTemplates(loadedTemplates.push(template));
-    console.log(loadedTemplates);
+    else {
+        newLoadedTemplates.push(template)
+        setLoadedTemplates(newLoadedTemplates);
+    }
 
-    console.log("New templates: ", loadedTemplates);
-    await pushTemplates(userRef, loadedTemplates);
+    console.log("New templates: ", newLoadedTemplates);
+    await pushTemplates(userRef, newLoadedTemplates);
 }
 
 export const loadTemplates = async (data, userRef, setLoadedTemplates) => {
