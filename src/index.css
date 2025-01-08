@@ -72,34 +72,29 @@ html {
     .MuiTextField-root {
         background-color: #767e99ff !important;
     }
-    .MuiOutlinedInput-root textarea{
-        color: white !important;
-    }
-    input, label, label.Mui-focused {
-        color: white !important;
-    }
-    .MuiOutlinedInput-root 
-    /* 
-    '& .MuiInput-underline:after': {
-        borderBottomColor: '#B2BAC2',
-    },
-    '& .MuiOutlinedInput-root': {
-        '& fieldset': {
-            borderColor: '#E0E3E7',
-        },
-        '&:hover fieldset': {
-            borderColor: '#B2BAC2',
-        },
-        '&.Mui-focused fieldset': {
-            borderColor: '#6F7E8C',
-        },
-    }, */
 
+    .MuiOutlinedInput-root textarea {
+        color: white !important;
+    }
+
+    input,
+    label,
+    label.Mui-focused {
+        color: white !important;
+    }
+
+    .MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline {
+        border-color: white !important;
+    }
+
+    .Mui-focused .MuiOutlinedInput-notchedOutline {
+        border-color: white !important;
+    }
 
     .MuiCheckbox-root {
         border-color: #767e99ff !important;
     }
-    
+
     .Mui-checked {
         color: #8d96afff !important;
     }
@@ -120,6 +115,7 @@ html {
         background-color: #8d96afff;
         color: white;
     }
+
     .theme-toggle {
         background: none;
     }
@@ -129,6 +125,7 @@ html {
     background-image: linear-gradient(45deg, #f4f7fdff, #fcf4fdff);
     transition: background 0.6s ease-in-out;
     color: #595959;
+
     .draftText {
         background: linear-gradient(45deg, #b08cf8ff, #9e97ffff, #51b4fcff);
         -webkit-text-fill-color: transparent;
@@ -165,16 +162,19 @@ html {
     .MuiTextField-root {
         background-color: #ccdbf7ff !important;
     }
-    .MuiOutlinedInput-root textarea{
+
+    .MuiOutlinedInput-root textarea {
         color: #595959 !important;
     }
+
     input {
         color: #595959 !important;
     }
+
     .MuiCheckbox-root {
         border-color: #ccdbf7ff !important;
     }
-    
+
     .Mui-checked {
         color: #9db9f8ff !important;
     }
@@ -195,6 +195,7 @@ html {
         background-color: #9db9f8ff;
         color: #595959;
     }
+
     .theme-toggle {
         background: none;
     }

@@ -1,5 +1,5 @@
 "use strict";
-import React, {useState, useEffect} from 'react'
+import React, {useEffect} from 'react'
 import './index.css'
 import './theme-toggle.js'
 import Box from '@mui/material/Box';
@@ -15,6 +15,7 @@ import {GoogleAuthProvider, signInWithPopup} from "firebase/auth";
 import {doc, getFirestore} from 'firebase/firestore';
 import AddIcon from '@mui/icons-material/Add';
 import {sendEmail, getTemplate, openTemplate, removeTemplate, saveTemplate, loadTemplates} from "./data/data.js";
+import {useStore} from "./data/store.js";
 
 const signOut = auth => auth.signOut().then(() => console.log('signed out')).then(localStorage.removeItem("savedTemplates"));
 const signIn = async auth => {
@@ -57,50 +58,12 @@ function SignedInHTML({user}) {
     //----------------------------------------------------------   FORM FUNCTIONS, VALUES  ----------------------------------------------------------
     const auth = useAuth();
 
-    const [formValues, setFormValues] = useState({
-        email: '',
-        subject: '',
-        body: '',
-        range: '',
-        templateLink: '',
-        templateName: '',
-    });
-    const [formFields, setFormFields] = useState([]);
-    const [sheet, setSheet] = useState(false);
-    const [templateStatus, setTemplate] = useState('template');
-    const [currentTemplate, setCurrentTemplate] = useState(null);
+    const { formValues, formFields, sheet, templateStatus, currentTemplate, buttonText, handleFormChange, addFormField, handleFormFieldChange, handleSheetChange, handleTemplateChange, setTemplateStatus, setCurrentTemplate, setButtonText, setSheet} = useStore();
 
-    const handleFormChange = (event) => {
-        const {name, value} = event.target;
-        setFormValues(prevValues => ({
-            ...prevValues,
-            [name]: value
-        }));
-    };
-
-    const addFormField = (label) => {
-        setFormFields(prevFormFields => ([...prevFormFields, {id: (prevFormFields.length + 1).toString(), value: '', label: label}]));
-    }
-    const handleFormFieldChange = (id, event) => {
-        const updatedFormField = formFields.map((formField) =>
-            formField.id === id ? {...formField, value: event.target.value, label: formField.label} : formField
-        );
-        setFormFields(updatedFormField);
-    }
-
-    const handleSheetChange = (event) => {
-        setSheet(event.target.checked);
-    };
-
-    const handleTemplateChange = (event, newTemplateStatus) => {
-        setTemplate(newTemplateStatus);
-    }
 
     const handleSubmit = (event) => {
         event.preventDefault();
     };
-
-    const [buttonText, setButtonText] = useState('send !!!');
 
 
     //----------------------------------------------------------   FUNCTIONS FOR SAVED TEMPLATES  ----------------------------------------------------------
@@ -108,10 +71,10 @@ function SignedInHTML({user}) {
     const userRef = doc(db, 'users', user.uid);
     const {data, status} = useFirestoreDocData(userRef);
 
-    
+
     //load templates as soon as signin
     useEffect(() => {
-        if (status == 'success' && user && !localStorage.savedTemplates) loadTemplates(data);
+        if (status == 'success' && user && !localStorage.savedTemplates) loadTemplates(data, userRef);
     }, [signIn, user, status])
 
     //----------------------------------------------------------   SIGNED IN HTML/CSS  ----------------------------------------------------------
@@ -141,12 +104,12 @@ function SignedInHTML({user}) {
                     {JSON.parse(localStorage.getItem("savedTemplates")).filter(template => template.templateName != "Template name").map((template, index) => (
                         <Button
                             key={index}
-                            onClick={(event) => openTemplate(event, template.templateName, setCurrentTemplate, setSheet, setTemplate, formValues)}
+                            onClick={(event) => openTemplate(event, template.templateName, setCurrentTemplate, setSheet, setTemplateStatus, formValues)}
                         >
                             {template.templateName}
                         </Button>
                     ))}
-                    <Button aria-label="add" onClick={(event) => openTemplate(event, "Template name", setCurrentTemplate, setSheet, setTemplate, formValues)}>
+                    <Button aria-label="add" onClick={(event) => openTemplate(event, "Template name", setCurrentTemplate, setSheet, setTemplateStatus, formValues)}>
                         <AddIcon />
                     </Button>
                 </ButtonGroup>
@@ -287,7 +250,7 @@ function SignedInHTML({user}) {
                         </Box>
                     </form>
                 )}
-                <br />
+                <br /><br />
                 <p>3. send !!</p>
                 <button onClick={() => setButtonText(sendEmail(formValues, sheet, templateStatus, formFields) ? "sent !!!" : "error sending")}>{buttonText}</button>
                 <br /><br />
@@ -305,10 +268,10 @@ function SignedInHTML({user}) {
                         value={formValues.templateName}
                         onChange={handleFormChange}
                     />
-                    <button type="button" onClick={saveTemplate(formValues, sheet, templateStatus)} style={{width: '10ch', marginLeft: "3ch", marginTop: "1.5ch"}}>Save!</button>
+                    <button type="button" onClick={() => saveTemplate(formValues, sheet, templateStatus, userRef)} style={{width: '10ch', marginLeft: "3ch", marginTop: "1.5ch"}}>Save!</button>
                 </Box>
                 <br /><br />
-                <button onClick={(event) => removeTemplate(event, currentTemplate.templateName, setCurrentTemplate)} className="removeTemplate">Remove template</button>
+                <button onClick={(event) => removeTemplate(event, currentTemplate.templateName, setCurrentTemplate, userRef)} className="removeTemplate">Remove template</button>
             </div>
         }
         <br /><br />
@@ -321,7 +284,7 @@ function SignedInHTML({user}) {
 function SignedOutHTML() {
     const auth = useAuth();
     return <div>
-        <h2>mail maker !!!!</h2>
+        <h1 className="draftText">mail maker !!!!</h1>
         <br />
         <h3>give a template, and we&quot;ll mass send emails!</h3>
         <br />

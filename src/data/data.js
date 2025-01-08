@@ -225,7 +225,7 @@ export const sendEmail = async (formValues, sheet, templateStatus, formFields) =
     }
 };
 
-export const saveTemplate = async (formValues, sheet, templateStatus) => {
+export const saveTemplate = async (formValues, sheet, templateStatus, userRef) => {
     //save to local storage
     let savedTemplates = JSON.parse(localStorage.getItem("savedTemplates"));
 
@@ -250,10 +250,10 @@ export const saveTemplate = async (formValues, sheet, templateStatus) => {
 
     localStorage.setItem("savedTemplates", JSON.stringify(savedTemplates));
     console.log("New templates: ", localStorage.getItem("savedTemplates"))
-    await pushTemplates();
+    await pushTemplates(userRef);
 }
 
-export const loadTemplates = async (data) => {
+export const loadTemplates = async (data, userRef) => {
     try {
         if (data.templates != null) {
             console.log('Received templates:', data.templates);
@@ -273,7 +273,7 @@ export const loadTemplates = async (data) => {
             let templates = [];
             templates.push(blankTemplate);
             localStorage.setItem("savedTemplates", JSON.stringify(templates));
-            await pushTemplates();
+            await pushTemplates(userRef);
             console.log(templates);
         }
     } catch (error) {
@@ -301,11 +301,11 @@ export const openTemplate = (event, selectedTemplateName, setCurrentTemplate, se
     Object.assign(formValues, newTemplate);
 };
 
-export const removeTemplate = (event, selectedTemplateName, setCurrentTemplate) => {
+export const removeTemplate = (event, selectedTemplateName, setCurrentTemplate, userRef) => {
     const selectedTemplate = JSON.parse(localStorage.getItem("savedTemplates")).find(template => template.templateName == selectedTemplateName);
     setCurrentTemplate(null);
     let savedTemplates = JSON.parse(localStorage.getItem("savedTemplates"));
     savedTemplates = savedTemplates.filter(template => template.templateName != selectedTemplate.templateName);
     localStorage.setItem("savedTemplates", JSON.stringify(savedTemplates));
-    pushTemplates();
+    pushTemplates(userRef);
 };
