@@ -86,7 +86,7 @@ function SignedInHTML({user}) {
         <nav>
             <div className="navitems">
                 <div className="left">
-                    <a href="/" className="home-link">logo</a>
+                    <a href="/" className="home-link"><img src="logo.png" height="50"/></a>
                 </div>
                 <div className="right">
                     <p className="rightitem">hi {user.displayName.split(' ')[0].toLowerCase()} !!!! ({user.email})</p>
@@ -287,8 +287,8 @@ function SignedInHTML({user}) {
 function SignedOutHTML() {
     const auth = useAuth();
     return <div>
-        <h1 className="draftText">mail maker !!!!</h1>
-        <br />
+        <img src="logo.png" />
+        <br /><br />
         <h3>give a template, and we&quot;ll mass send emails!</h3>
         <br />
         <button onClick={() => signIn(auth)} className="signInButton">sign in !!! (requires google account access) 🚀</button>
