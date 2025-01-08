@@ -1,6 +1,7 @@
 "use strict";
 import {useState, useEffect} from 'react'
 import './index.css'
+import './theme-toggle.js'
 import Box from '@mui/material/Box';
 import ToggleButton from '@mui/material/ToggleButton';
 import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
@@ -9,7 +10,7 @@ import Button from '@mui/material/Button';
 import ButtonGroup from '@mui/material/ButtonGroup';
 import {Checkbox, FormControlLabel, FormGroup, inputClasses} from '@mui/material';
 import {useAuth, useSigninCheck, FirebaseAppProvider, FirestoreProvider, useFirestoreDocData, useFirestore, useFirebaseApp, AuthProvider, useStorage} from 'reactfire';
-import {getAuth} from 'firebase/auth';
+import {getAuth, onAuthStateChanged} from 'firebase/auth';
 import {GoogleAuthProvider, signInWithPopup} from "firebase/auth";
 import {doc, getFirestore, updateDoc, setDoc, connectFirestoreEmulator} from 'firebase/firestore';
 import AddIcon from '@mui/icons-material/Add';
@@ -27,7 +28,6 @@ const signIn = async auth => {
 
 function Auth() {
     const {status, data: signinResult} = useSigninCheck();
-    const db = useFirestore();
 
     if (status === 'loading') {
         return <p>loading !!!</p>;
@@ -35,7 +35,7 @@ function Auth() {
 
     const {signedIn, user} = signinResult;
     if (signedIn) {
-        return (<SignedInHTML user={user} db={db} />);
+        return (<SignedInHTML user={user} />);
     } else return (<SignedOutHTML />);
 }
 
@@ -52,7 +52,7 @@ function App() {
     )
 }
 
-function SignedInHTML({user, db}) {
+function SignedInHTML({user}) {
     //----------------------------------------------------------   FORM FUNCTIONS, VALUES  ----------------------------------------------------------
     const auth = useAuth();
 
@@ -325,12 +325,9 @@ function SignedInHTML({user, db}) {
 
 
     //----------------------------------------------------------   FUNCTIONS FOR SAVED TEMPLATES  ----------------------------------------------------------
+    const db = useFirestore();
     const userRef = doc(db, 'users', user.uid);
-    const {data} = useFirestoreDocData(userRef);
-    if (!data) {
-        console.log("Creating new document...");
-        setDoc(userRef, {});
-    }
+    const {data, status} = useFirestoreDocData(userRef);
 
     const saveTemplate = async () => {
         //save to local storage
@@ -418,8 +415,8 @@ function SignedInHTML({user, db}) {
     };
     //load templates as soon as signin
     useEffect(() => {
-        if (!user || !localStorage.savedTemplates) loadTemplates();
-    }, [signIn, user])
+        if (status == 'success' && user && !localStorage.savedTemplates) loadTemplates();
+    }, [signIn, user, status])
 
     //----------------------------------------------------------   SIGNED IN HTML/CSS  ----------------------------------------------------------
     return <div>
@@ -435,15 +432,15 @@ function SignedInHTML({user, db}) {
             </div>
         </nav>
         <br /><br />
-        <h1>draft your email here !!</h1>
+        <h1 className="draftText">draft your email here !!</h1>
         <br />
         <p>Your saved templates:</p>
+        <br />
         <div>
             {localStorage.getItem("savedTemplates") &&
-                <ButtonGroup 
-                    variant="outlined" 
+                <ButtonGroup
+                    variant="outlined"
                     aria-label="Templates"
-                    sx = {{}}
                 >
                     {JSON.parse(localStorage.getItem("savedTemplates")).filter(template => template.templateName != "Template name").map((template, index) => (
                         <Button
@@ -478,10 +475,7 @@ function SignedInHTML({user, db}) {
                     />
                     <FormGroup>
                         <FormControlLabel control={
-                            <Checkbox
-                                onChange={handleSheetChange}
-                                sx={{color: '#A0AAB4', '& .MuiCheckbox-root': {borderColor: '#cad2c5'}, '&.Mui-checked': {color: '#cad2c5'}}}
-                            />}
+                            <Checkbox onChange={handleSheetChange} />}
                             label="Google Sheet"
                             sx={{display: 'flex', justifyContent: 'center', }}
                         />
@@ -518,16 +512,15 @@ function SignedInHTML({user, db}) {
                     />
                 </Box>
                 <p>2. Upload a template or fill out the body!</p>
-
+                <br />
                 <ToggleButtonGroup
                     value={templateStatus}
                     exclusive
                     onChange={handleTemplateChange}
                     variant="outlined"
-                    sx={{'& .MuiToggleButton-root': {color: '#A0AAB4', borderColor: '#cad2c5'}, '& .MuiToggleButton-root.Mui-selected': {color: 'white', borderColor: 'white'}}}
                 >
-                    <ToggleButton value="template">Use template</ToggleButton>
-                    <ToggleButton value="write">Write yourself</ToggleButton>
+                    <ToggleButton value="template">use template</ToggleButton>
+                    <ToggleButton value="write">write yourself</ToggleButton>
                 </ToggleButtonGroup>
                 {templateStatus == "template" && ( //template selected
                     <form onSubmit={handleSubmit}>
@@ -619,7 +612,7 @@ function SignedInHTML({user, db}) {
                     <button type="button" onClick={saveTemplate} style={{width: '10ch', marginLeft: "3ch", marginTop: "1.5ch"}}>Save!</button>
                 </Box>
                 <br /><br />
-                <button onClick={(event) => removeTemplate(event, currentTemplate.templateName)} class="signOutButton">Remove template</button>
+                <button onClick={(event) => removeTemplate(event, currentTemplate.templateName)} class="removeTemplate">Remove template</button>
             </div>
         }
         <br /><br />
@@ -657,34 +650,6 @@ function TextInput({name, label, id, value, onChange, multiline = false, rows = 
             onChange={onChange}
             multiline={multiline}
             rows={rows}
-            sx={{
-                '& label': {
-                    color: '#A0AAB4',
-                },
-                '& label.Mui-focused': {
-                    color: '#A0AAB4',
-                },
-                '& .MuiInput-underline:after': {
-                    borderBottomColor: '#B2BAC2',
-                },
-                input: {
-                    color: '#cad2c5',
-                },
-                '& .MuiOutlinedInput-root': {
-                    '& fieldset': {
-                        borderColor: '#E0E3E7',
-                    },
-                    '&:hover fieldset': {
-                        borderColor: '#B2BAC2',
-                    },
-                    '&.Mui-focused fieldset': {
-                        borderColor: '#6F7E8C',
-                    },
-                    '& textarea': {
-                        color: '#cad2c5', // Change text color inside the textarea
-                    },
-                },
-            }}
         />
     );
 }

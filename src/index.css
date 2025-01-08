@@ -1,12 +1,16 @@
+@import "theme-toggle.css";
+
 html {
     height: 100%;
 }
+
 #root {
     max-width: 1280px;
     margin: 0 auto;
     padding: 2rem;
     text-align: center;
 }
+
 :root {
     background-attachment: fixed;
     height: 100%;
@@ -14,8 +18,10 @@ html {
     line-height: 1.5;
     font-weight: 400;
 
-    color-scheme: light dark;
-    color: #cad2c5;
+    /* color-scheme: light;
+    &[data-theme="dark"] {
+        color-scheme: dark;
+    } */
 
     font-synthesis: none;
     text-rendering: optimizeLegibility;
@@ -23,19 +29,20 @@ html {
     -moz-osx-font-smoothing: grayscale;
 }
 
-@media (prefers-color-scheme: dark) {
-    h1 {
+[data-theme="dark"] {
+    background-image: linear-gradient(45deg, #465468ff, #454463ff);
+    transition: background 0.6s ease-in-out;
+    color: white;
+
+    .draftText {
         background: linear-gradient(45deg, #b08cf8ff, #9e97ffff, #51b4fcff);
         -webkit-text-fill-color: transparent;
         background-clip: text;
     }
 
-    :root {
-        background-image: linear-gradient(45deg, #4c5568ff, #5a445cff);
-    }
-
     .signOutButton {
-        background-color: #7f6d97ff;
+        background-color: #5b6380ff;
+        color: white;
     }
 
     .navitems {
@@ -43,13 +50,155 @@ html {
         color: white;
     }
 
+    .signInButton {
+        background-color: #5b6380ff;
+    }
+
     .MuiButton-root {
-        background-color: '#7f6d97ff';
-        color: 'white';
+        background-color: #5b6380ff !important;
+        color: white !important;
+        border-color: white !important;
+        text-transform: none;
+    }
+
+    .MuiSvgIcon-root {
+        color: white;
+    }
+
+    .emailBox {
+        background-color: #5b6380ff;
+    }
+
+    .MuiTextField-root {
+        background-color: #767e99ff !important;
+    }
+    .MuiOutlinedInput-root textarea{
+        color: white !important;
+    }
+    input, label, label.Mui-focused {
+        color: white !important;
+    }
+    /* 
+    '& .MuiInput-underline:after': {
+        borderBottomColor: '#B2BAC2',
+    },
+    '& .MuiOutlinedInput-root': {
+        '& fieldset': {
+            borderColor: '#E0E3E7',
+        },
+        '&:hover fieldset': {
+            borderColor: '#B2BAC2',
+        },
+        '&.Mui-focused fieldset': {
+            borderColor: '#6F7E8C',
+        },
+        '& textarea': {
+            color: '#cad2c5', // Change text color inside the textarea
+        },
+    }, */
+
+
+    .MuiCheckbox-root {
+        border-color: #767e99ff !important;
+    }
+    
+    .Mui-checked {
+        color: #8d96afff !important;
+    }
+
+    .MuiToggleButton-root {
+        background-color: #767e99ff !important;
+        color: white !important;
+        border-color: none !important;
+        text-transform: none;
+        border-radius: 15x;
+    }
+
+    .MuiToggleButton-root.Mui-selected {
+        background-color: #8d96afff !important;
+    }
+
+    button {
+        background-color: #8d96afff;
+        color: white;
+    }
+    .theme-toggle {
+        background: none;
+    }
+}
+
+[data-theme="light"] {
+    background-image: linear-gradient(45deg, #f4f7fdff, #fcf4fdff);
+    transition: background 0.6s ease-in-out;
+    color: #595959;
+    .draftText {
+        background: linear-gradient(45deg, #b08cf8ff, #9e97ffff, #51b4fcff);
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .signOutButton {
+        background-color: #9db9f8ff;
+    }
+
+    .navitems {
+        background-image: linear-gradient(90deg, #ffaaf4ff, #d7acffff, #66d6ffff);
+        color: white;
     }
 
     .signInButton {
-        background-color: #7f6d97ff;
+        background-color: #9db9f8ff;
+    }
+
+    .MuiButton-root {
+        background-color: #e5e9f5ff !important;
+        color: #595959 !important;
+        text-transform: none;
+    }
+
+    .MuiSvgIcon-root {
+        color: #595959;
+    }
+
+    .emailBox {
+        background-color: #e5e9f5ff;
+    }
+
+    .MuiTextField-root {
+        background-color: #ccdbf7ff !important;
+    }
+    .MuiOutlinedInput-root textarea{
+        color: #595959 !important;
+    }
+    input {
+        color: #595959 !important;
+    }
+    .MuiCheckbox-root {
+        border-color: #ccdbf7ff !important;
+    }
+    
+    .Mui-checked {
+        color: #9db9f8ff !important;
+    }
+
+    .MuiToggleButton-root {
+        background-color: #ccdbf7ff !important;
+        color: #595959 !important;
+        border-color: none !important;
+        text-transform: none;
+        border-radius: 15x;
+    }
+
+    .MuiToggleButton-root.Mui-selected {
+        background-color: #9db9f8ff !important;
+    }
+
+    button {
+        background-color: #9db9f8ff;
+        color: #595959;
+    }
+    .theme-toggle {
+        background: none;
     }
 }
 
@@ -104,6 +253,7 @@ nav {
     top: 0px;
     left: 0px;
     right: 0px;
+    z-index: 10000;
 }
 
 .navitems {
@@ -128,6 +278,7 @@ nav {
 }
 
 .rightitem {
+    padding-top: 10px;
     padding-right: 50px;
 }
 
@@ -135,5 +286,4 @@ nav {
     border-radius: 8px;
     border: 1px solid transparent;
     padding: 2em;
-    background-color: #354f52;
 }

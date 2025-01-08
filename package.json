@@ -26,7 +26,8 @@
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "reactfire": "^4.2.3",
-    "session": "^0.1.0"
+    "session": "^0.1.0",
+    "zustand": "^5.0.3"
   },
   "devDependencies": {
     "@eslint/js": "^9.13.0",
