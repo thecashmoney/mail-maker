@@ -81,6 +81,10 @@ function SignedInHTML({user}) {
         }
     }, [signIn, user, status])
 
+    useEffect(() => {
+        console.log(loadedTemplates);
+    }, [loadedTemplates])
+
     //----------------------------------------------------------   SIGNED IN HTML/CSS  ----------------------------------------------------------
     return <div>
         <nav>
@@ -254,7 +258,7 @@ function SignedInHTML({user}) {
                 )}
                 <br /><br />
                 <p>3. send !!</p>
-                <button onClick={() => setButtonText(sendEmail(formValues, sheet, templateStatus, formFields, loadedTemplates) ? "sent !!!" : "error sending")}>{buttonText}</button>
+                <button onClick={() => setButtonText(sendEmail(formValues, sheet, templateStatus, formFields, user) ? "sent !!!" : "error sending")}>{buttonText}</button>
                 <br /><br />
                 <p>Save template?</p>
                 <Box

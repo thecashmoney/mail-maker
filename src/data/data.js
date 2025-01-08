@@ -51,7 +51,7 @@ export async function getSheet(formValues, user) {
     }
 }
 
-export async function getTemplate(formValues, addFormField, setLoadedTemplates) {
+export async function getTemplate(formValues, addFormField) {
     try {
         //look for template id
         const regex = /https:\/\/docs\.google\.com\/document\/d\/([a-zA-Z0-9_-]+)/;
@@ -146,7 +146,7 @@ export async function getTemplate(formValues, addFormField, setLoadedTemplates) 
             }
         });
         messageArr.push(message);
-        setLoadedTemplates(messageArr);
+        localStorage.setItem("messageArr", messageArr);
     }
     catch {
         console.error("Error reading template:");
@@ -154,18 +154,18 @@ export async function getTemplate(formValues, addFormField, setLoadedTemplates) 
     }
 }
 
-export const sendEmail = async (formValues, sheet, templateStatus, formFields, loadedTemplates) => {
+export const sendEmail = async (formValues, sheet, templateStatus, formFields, user) => {
     console.log("Sheet: ", sheet);
     let toEmail;
     if (!sheet) {
         toEmail = formValues.email;
     }
     else {
-        toEmail = await getSheet();
+        toEmail = await getSheet(formValues, user);
     }
     let message;
     if (templateStatus == "template") {
-        const messageArr = loadedTemplates;
+        const messageArr = localStorage.getItem("messageArr");
         console.log(messageArr);
 
         //create basic message
@@ -248,6 +248,7 @@ export const saveTemplate = async (formValues, sheet, templateStatus, userRef, l
 
     //otherwise add current template
     else setLoadedTemplates(loadedTemplates.push(template));
+    console.log(loadedTemplates);
 
     console.log("New templates: ", loadedTemplates);
     await pushTemplates(userRef, loadedTemplates);
@@ -255,7 +256,7 @@ export const saveTemplate = async (formValues, sheet, templateStatus, userRef, l
 
 export const loadTemplates = async (data, userRef, setLoadedTemplates) => {
     try {
-        if (data.templates != null) {
+        if (data && data.templates != null) {
             console.log('Received templates:', data.templates);
             setLoadedTemplates(data.templates);
         } else {
@@ -271,8 +272,8 @@ export const loadTemplates = async (data, userRef, setLoadedTemplates) => {
             };
             let templates = [];
             templates.push(blankTemplate);
-            await pushTemplates(userRef);
-            setLoadedTemplates(data.templates);
+            await pushTemplates(userRef, templates);
+            setLoadedTemplates(templates);
         }
     } catch (error) {
         console.error('error calling firestore:', error);
