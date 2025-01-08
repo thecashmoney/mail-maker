@@ -301,7 +301,6 @@ export const openTemplate = (event, selectedTemplateName, setCurrentTemplate, se
     setSheet(newTemplate.sheet)
     setTemplate(newTemplate.templateStatus);
     Object.assign(formValues, newTemplate);
-    console.log(formValues);
 };
 
 export const removeTemplate = (event, selectedTemplateName, setCurrentTemplate, userRef, loadedTemplates, setLoadedTemplates) => {
