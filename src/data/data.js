@@ -1,4 +1,4 @@
-import {updateDoc} from 'firebase/firestore';
+import {setDoc} from 'firebase/firestore';
 
 export async function getSheet(formValues, user) {
     try {
@@ -52,7 +52,7 @@ export async function getSheet(formValues, user) {
 
 //----------------------------------------------------------   FUNCTIONS FOR SENDING EMAILS  ----------------------------------------------------------
 
-export async function getTemplate(formValues, addFormField) {
+export async function getTemplate(formValues, addFormField, setLoadedTemplates) {
     try {
         //look for template id
         const regex = /https:\/\/docs\.google\.com\/document\/d\/([a-zA-Z0-9_-]+)/;
@@ -147,7 +147,7 @@ export async function getTemplate(formValues, addFormField) {
             }
         });
         messageArr.push(message);
-        localStorage.setItem("messageArr", JSON.stringify(messageArr));
+        setLoadedTemplates(messageArr);
     }
     catch {
         console.error("Error reading template:");
@@ -155,7 +155,7 @@ export async function getTemplate(formValues, addFormField) {
     }
 }
 
-export const sendEmail = async (formValues, sheet, templateStatus, formFields) => {
+export const sendEmail = async (formValues, sheet, templateStatus, formFields, loadedTemplates) => {
     console.log("Sheet: ", sheet);
     let toEmail;
     if (!sheet) {
@@ -166,7 +166,7 @@ export const sendEmail = async (formValues, sheet, templateStatus, formFields) =
     }
     let message;
     if (templateStatus == "template") {
-        const messageArr = JSON.parse(localStorage.getItem("messageArr"));
+        const messageArr = loadedTemplates;
         console.log(messageArr);
 
         //create basic message
@@ -225,10 +225,7 @@ export const sendEmail = async (formValues, sheet, templateStatus, formFields) =
     }
 };
 
-export const saveTemplate = async (formValues, sheet, templateStatus, userRef) => {
-    //save to local storage
-    let savedTemplates = JSON.parse(localStorage.getItem("savedTemplates"));
-
+export const saveTemplate = async (formValues, sheet, templateStatus, userRef, loadedTemplates, setLoadedTemplates) => {
     const template = {
         email: formValues.email,
         sheet: sheet,
@@ -240,27 +237,28 @@ export const saveTemplate = async (formValues, sheet, templateStatus, userRef) =
     };
 
     //search if template already exists
-    const templateIndex = savedTemplates.findIndex(temp => temp.templateName == formValues.templateName)
+    const templateIndex = loadedTemplates.findIndex(temp => temp.templateName == formValues.templateName)
 
     //modify existing template
-    if (templateIndex != -1) savedTemplates[templateIndex] = template;
+    if (templateIndex != -1) {
+        loadedTemplates[templateIndex] = template;
+        setLoadedTemplates(loadedTemplates);
+    }
 
     //otherwise add current template
-    else savedTemplates.push(template);
+    else setLoadedTemplates(loadedTemplates.push(template));
 
-    localStorage.setItem("savedTemplates", JSON.stringify(savedTemplates));
-    console.log("New templates: ", localStorage.getItem("savedTemplates"))
-    await pushTemplates(userRef);
+    console.log("New templates: ", loadedTemplates);
+    await pushTemplates(userRef, loadedTemplates);
 }
 
-export const loadTemplates = async (data, userRef) => {
+export const loadTemplates = async (data, userRef, setLoadedTemplates) => {
     try {
         if (data.templates != null) {
             console.log('Received templates:', data.templates);
-            localStorage.setItem("savedTemplates", data.templates);
+            setLoadedTemplates(data.templates);
         } else {
             console.log('new user');
-            localStorage.removeItem("savedTemplates");
             const blankTemplate = {
                 email: "",
                 sheet: false,
@@ -272,40 +270,37 @@ export const loadTemplates = async (data, userRef) => {
             };
             let templates = [];
             templates.push(blankTemplate);
-            localStorage.setItem("savedTemplates", JSON.stringify(templates));
             await pushTemplates(userRef);
-            console.log(templates);
+            setLoadedTemplates(data.templates);
         }
     } catch (error) {
         console.error('error calling firestore:', error);
     };
 }
 //save to cloud storage
-const pushTemplates = async (userRef) => {
+const pushTemplates = async (userRef, loadedTemplates) => {
     try {
-        await updateDoc(userRef, {
-            templates: localStorage.getItem("savedTemplates"),
+        await setDoc(userRef, {
+            templates: loadedTemplates,
         });
-        console.log('JSON data stored successfully!');
-        //localStorage.removeItem("savedTemplates");
+        console.log('Data stored successfully!');
     } catch (error) {
         console.error('Error storing data:', error);
     };
 }
 
-export const openTemplate = (event, selectedTemplateName, setCurrentTemplate, setSheet, setTemplate, formValues) => {
-    const newTemplate = JSON.parse(localStorage.getItem("savedTemplates")).find(template => template.templateName == selectedTemplateName);
+export const openTemplate = (event, selectedTemplateName, setCurrentTemplate, setSheet, setTemplate, formValues, loadedTemplates) => {
+    const newTemplate = loadedTemplates.find(template => template.templateName == selectedTemplateName);
     setCurrentTemplate(newTemplate);
     setSheet(newTemplate.sheet)
     setTemplate(newTemplate.templateStatus);
     Object.assign(formValues, newTemplate);
 };
 
-export const removeTemplate = (event, selectedTemplateName, setCurrentTemplate, userRef) => {
-    const selectedTemplate = JSON.parse(localStorage.getItem("savedTemplates")).find(template => template.templateName == selectedTemplateName);
+export const removeTemplate = (event, selectedTemplateName, setCurrentTemplate, userRef, loadedTemplates, setLoadedTemplates) => {
+    const selectedTemplate = loadedTemplates.find(template => template.templateName == selectedTemplateName);
     setCurrentTemplate(null);
-    let savedTemplates = JSON.parse(localStorage.getItem("savedTemplates"));
-    savedTemplates = savedTemplates.filter(template => template.templateName != selectedTemplate.templateName);
-    localStorage.setItem("savedTemplates", JSON.stringify(savedTemplates));
-    pushTemplates(userRef);
+    const newLoadedTemplates = loadedTemplates.filter(template => template.templateName != selectedTemplate.templateName)
+    setLoadedTemplates(newLoadedTemplates);
+    pushTemplates(userRef, newLoadedTemplates);
 };

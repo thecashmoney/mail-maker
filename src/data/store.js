@@ -13,6 +13,7 @@ export const useStore = create((set) => ({
     templateStatus: "template",
     currentTemplate: null,
     buttonText: "send !!!",
+    loadedTemplates: [],
     setTemplateStatus: (templateStatus) => {
         set({
             templateStatus: templateStatus
@@ -31,6 +32,11 @@ export const useStore = create((set) => ({
     setSheet: (sheet) => {
         set({
             sheet: sheet
+        })
+    },
+    setLoadedTemplates: (savedTemplates) => {
+        set({
+            loadedTemplates: savedTemplates
         })
     },
     handleFormChange: (event) => {

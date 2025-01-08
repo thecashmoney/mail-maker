@@ -58,7 +58,7 @@ function SignedInHTML({user}) {
     //----------------------------------------------------------   FORM FUNCTIONS, VALUES  ----------------------------------------------------------
     const auth = useAuth();
 
-    const { formValues, formFields, sheet, templateStatus, currentTemplate, buttonText, handleFormChange, addFormField, handleFormFieldChange, handleSheetChange, handleTemplateChange, setTemplateStatus, setCurrentTemplate, setButtonText, setSheet} = useStore();
+    const { formValues, formFields, sheet, templateStatus, currentTemplate, buttonText, handleFormChange, addFormField, handleFormFieldChange, handleSheetChange, handleTemplateChange, setTemplateStatus, setCurrentTemplate, setButtonText, setSheet, loadedTemplates, setLoadedTemplates} = useStore();
 
 
     const handleSubmit = (event) => {
@@ -74,9 +74,12 @@ function SignedInHTML({user}) {
 
     //load templates as soon as signin
     useEffect(() => {
-        if (status == 'success' && user && !localStorage.savedTemplates) loadTemplates(data, userRef);
+        if (status == 'success' && user && loadedTemplates.length == 0) {
+            console.log("loading");
+            loadTemplates(data, userRef, setLoadedTemplates);
+        }
     }, [signIn, user, status])
-
+    
     //----------------------------------------------------------   SIGNED IN HTML/CSS  ----------------------------------------------------------
     return <div>
         <nav>
@@ -96,24 +99,22 @@ function SignedInHTML({user}) {
         <p>Your saved templates:</p>
         <br />
         <div>
-            {localStorage.getItem("savedTemplates") &&
-                <ButtonGroup
-                    variant="outlined"
-                    aria-label="Templates"
-                >
-                    {JSON.parse(localStorage.getItem("savedTemplates")).filter(template => template.templateName != "Template name").map((template, index) => (
-                        <Button
-                            key={index}
-                            onClick={(event) => openTemplate(event, template.templateName, setCurrentTemplate, setSheet, setTemplateStatus, formValues)}
-                        >
-                            {template.templateName}
-                        </Button>
-                    ))}
-                    <Button aria-label="add" onClick={(event) => openTemplate(event, "Template name", setCurrentTemplate, setSheet, setTemplateStatus, formValues)}>
-                        <AddIcon />
+            <ButtonGroup
+                variant="outlined"
+                aria-label="Templates"
+            >
+                {loadedTemplates.filter(template => template.templateName != "Template name").map((template, index) => (
+                    <Button
+                        key={index}
+                        onClick={(event) => openTemplate(event, template.templateName, setCurrentTemplate, setSheet, setTemplateStatus, formValues, loadedTemplates)}
+                    >
+                        {template.templateName}
                     </Button>
-                </ButtonGroup>
-            }
+                ))}
+                <Button aria-label="add" onClick={(event) => openTemplate(event, "Template name", setCurrentTemplate, setSheet, setTemplateStatus, formValues, loadedTemplates)}>
+                    <AddIcon />
+                </Button>
+            </ButtonGroup>
         </div>
         <br /><br />
         {currentTemplate &&
@@ -198,7 +199,7 @@ function SignedInHTML({user}) {
                                 value={formValues.templateLink}
                                 onChange={handleFormChange}
                             />
-                            <button type="button" onClick={async () => {await getTemplate(formValues, addFormField);}} style={{width: '10ch', marginLeft: "3ch", marginTop: "1.5ch"}}>Load!</button>
+                            <button type="button" onClick={async () => {await getTemplate(formValues, addFormField, setLoadedTemplates);}} style={{width: '10ch', marginLeft: "3ch", marginTop: "1.5ch"}}>Load!</button>
                         </Box>
                         {formFields.length != 0 && (
                             <Box
@@ -252,7 +253,7 @@ function SignedInHTML({user}) {
                 )}
                 <br /><br />
                 <p>3. send !!</p>
-                <button onClick={() => setButtonText(sendEmail(formValues, sheet, templateStatus, formFields) ? "sent !!!" : "error sending")}>{buttonText}</button>
+                <button onClick={() => setButtonText(sendEmail(formValues, sheet, templateStatus, formFields, loadedTemplates) ? "sent !!!" : "error sending")}>{buttonText}</button>
                 <br /><br />
                 <p>Save template?</p>
                 <Box
@@ -268,10 +269,10 @@ function SignedInHTML({user}) {
                         value={formValues.templateName}
                         onChange={handleFormChange}
                     />
-                    <button type="button" onClick={() => saveTemplate(formValues, sheet, templateStatus, userRef)} style={{width: '10ch', marginLeft: "3ch", marginTop: "1.5ch"}}>Save!</button>
+                    <button type="button" onClick={() => saveTemplate(formValues, sheet, templateStatus, userRef, loadedTemplates, setLoadedTemplates)} style={{width: '10ch', marginLeft: "3ch", marginTop: "1.5ch"}}>Save!</button>
                 </Box>
                 <br /><br />
-                <button onClick={(event) => removeTemplate(event, currentTemplate.templateName, setCurrentTemplate, userRef)} className="removeTemplate">Remove template</button>
+                <button onClick={(event) => removeTemplate(event, currentTemplate.templateName, setCurrentTemplate, userRef, loadedTemplates, setLoadedTemplates)} className="removeTemplate">Remove template</button>
             </div>
         }
         <br /><br />
