@@ -1,7 +1,9 @@
 <div style="text-align: center;">
 <img src="logo.png" alt="logo" />
-<h2>load. write. send.</h2>
-<h3>Try out mail-maker <a href="https://thecashmoney.github.io/mail-maker/">here</a>!</h3>
+</div>
+<div style="text-align: center;">
+<p>Automate your emails !!</p>
+<a href="https://thecashmoney.github.io/mail-maker/">Website</a>
 </div>
 ## A NOTE ON PRIVACY
 When you try and sign into the app, you will be warned that this app is **not verified**. This is because this app **requires** Google's API to send emails. As a result, I am requesting two scopes:
@@ -27,8 +29,10 @@ Mail-maker supports *italics*, **bold**, and underlined text. You can also add l
 You can add fields into your template. In your doc, simply add a backslash ("\\") into the fields you want.
 For example: `\name\` in your google doc creates a field called `name`.
 These fields will be generated when you click the load button in a template, and you can fill them out!
-| Add a field | Load & Add your field | Email result |
-| ![Add field](template1.png)][]
+| Add a field | Load your field | Email result |
+| --- | --- | --- |
+| ![Add field](template1.png) | ![Load field](template2.png) | ![email result](template3.png) |
+
 
 
 ## CREDITS
