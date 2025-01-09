@@ -1,6 +1,6 @@
 <p align = "center"> <img src="logo.png" alt="logo" /> </p>
 
-<p align="center">Automate your emails !!</p>
+<p align="center"><h1>A tool to automate your emails with templates!</h1></p>
 
 <p align="center">Try it out [here]("https://thecashmoney.github.io/mail-maker/")!</p>
 
@@ -9,6 +9,16 @@ When you try and sign into the app, you will be warned that this app is **not ve
 - gmail.send (I can send emails through your account, so I can send the emails you want)
 - documents.get (I can read google docs from your account- I need this so I can access template documents that you use)
 These scopes are marked as *sensitive*, and my app needs to undergo a verification process by google. However, I need to make a privacy policy, and so on, which is out of scope for me and in this timeline. If you still do not trust this app, you can look at where the sensitive code is by scrolling down to the appendix, or watch the video below.
+
+To proceed, do the following:
+- You will get a warning screen. Click advanced.
+- Click go to mail-maker-1bd49.firebaseapp.com.
+	- My developer email is elliottjang1@gmail.com!
+- Click continue.
+- If you plan on using the templates feature, click "See all your google docs documents." Recommended for long term use!
+- Click "send email on your behalf."
+- Click continue.
+- You are logged in!
 
 ## INSPIRATION
 This app was mostly inspired by club emails. The ones you send every week, reminding people to go to meetings. The problem was, no one wanted to write these. I scoured the school for reliable secretaries, but even they can get tired. To remove the tediousness of writing emails, I created mail-maker.
