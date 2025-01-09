@@ -36,7 +36,11 @@ To proceed, do the following:
 - Click "send email on your behalf."
 - Click continue.
 - You are logged in!
-
+## SCREENSHOTS
+![Screenshot1](Screenshot1.png)
+![Screenshot2](Screenshot2.png)
+![Screenshot3](Screenshot3.png)
+![Screenshot4](Screenshot4.png)
 ## INSPIRATION
 This app was mostly inspired by club emails. The ones you send every week, reminding people to go to meetings. The problem was, no one wanted to write these. I scoured the school for reliable secretaries, but even they can get tired. To remove the tediousness of writing emails, I created mail-maker.
 ## USAGE
