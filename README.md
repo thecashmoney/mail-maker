@@ -2,7 +2,7 @@
 
 <p align="center">Automate your emails !!</p>
 
-<p align="center"><a href="https://thecashmoney.github.io/mail-maker/">Website</a></p>
+<p align="center">Try it out [here]("https://thecashmoney.github.io/mail-maker/")!</p>
 
 ## A NOTE ON PRIVACY
 When you try and sign into the app, you will be warned that this app is **not verified**. This is because this app **requires** Google's API to send emails. As a result, I am requesting two scopes:
