@@ -1,10 +1,9 @@
-<div style="text-align: center;">
-<img src="logo.png" alt="logo" />
-</div>
-<div style="text-align: center;">
-<p>Automate your emails !!</p>
-<a href="https://thecashmoney.github.io/mail-maker/">Website</a>
-</div>
+<p align = "center"> <img src="logo.png" alt="logo" /> </p>
+
+<p align="center">Automate your emails !!</p>
+
+<p align="center"><a href="https://thecashmoney.github.io/mail-maker/">Website</a></p>
+
 ## A NOTE ON PRIVACY
 When you try and sign into the app, you will be warned that this app is **not verified**. This is because this app **requires** Google's API to send emails. As a result, I am requesting two scopes:
 - gmail.send (I can send emails through your account, so I can send the emails you want)
