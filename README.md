@@ -1,8 +1,7 @@
 <p align = "center"> <img src="logo.png" alt="logo" /> </p>
 
-<p align="center"><h1>A tool to automate your emails with templates!</h1></p>
-
-<p align="center">Try it out [here]("https://thecashmoney.github.io/mail-maker/")!</p>
+# <div align="center">A tool to automate your emails with templates!</div>
+## <div align="center">[Website]("https://thecashmoney.github.io/mail-maker/")</div>
 
 ## A NOTE ON PRIVACY
 When you try and sign into the app, you will be warned that this app is **not verified**. This is because this app **requires** Google's API to send emails. As a result, I am requesting two scopes:
