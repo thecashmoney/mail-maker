@@ -25,7 +25,7 @@
 When you try and sign into the app, you will be warned that this app is **not verified**. This is because this app **requires** Google's API to send emails. As a result, I am requesting two scopes:
 - gmail.send (I can send emails through your account, so I can send the emails you want)
 - documents.get (I can read google docs from your account- I need this so I can access template documents that you use)
-These scopes are marked as *sensitive*, and my app needs to undergo a verification process by google. However, I need to make a privacy policy, and so on, which is out of scope for me and in this timeline. If you still do not trust this app, you can look at where the sensitive code is by scrolling down to the appendix, or watch the video below.
+These scopes are marked as *sensitive*, and my app needs to undergo a verification process by google. However, I need to make a privacy policy, and so on, which is out of scope for me and in this timeline. If you still do not trust this app, you can look at where the sensitive code is by scrolling down to the appendix, or watch the video [here](https://cloud-fkmqplkow-hack-club-bot.vercel.app/0mail-maker_video.mp4).
 
 To proceed, do the following:
 - You will get a warning screen. Click advanced.
