@@ -1,4 +1,4 @@
-<div align = "center"> <img src="https://cloud-etz41envm-hack-club-bot.vercel.app/0logo.png" alt="logo" /> </div>
+<div align = "center"> <img src="logo.png" alt="logo" /> </div>
 <div id="user-content-toc">
   <ul align="center" style="list-style: none;">
     <summary>
