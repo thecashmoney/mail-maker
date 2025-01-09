@@ -289,7 +289,7 @@ function SignedOutHTML() {
     return <div>
         <img src="logo.png" />
         <br /><br />
-        <h3>give a template, and we&quot;ll mass send emails!</h3>
+        <h3>give a template, and we&apos;ll mass send emails!</h3>
         <br />
         <button onClick={() => signIn(auth)} className="signInButton">sign in !!! (requires google account access) 🚀</button>
 
