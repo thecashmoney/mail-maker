@@ -186,7 +186,7 @@ function SignedInHTML({user}) {
                 {templateStatus == "template" && ( //template selected
                     <form onSubmit={handleSubmit}>
                         <br />
-                        <p>Add a link to a template document! (doesn&quot;t need to be public)</p>
+                        <p>Add a link to a template document! (doesn&apos;t need to be public)</p>
                         <Box
                             component="form"
                             sx={{'& > :not(style)': {m: 1, width: '25ch'}}}

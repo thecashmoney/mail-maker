@@ -9,16 +9,6 @@
  */
 
 const {google} = require("googleapis");
-
-// google auth
-// const fs = require("fs").promises;
-// const path = require("path");
-// const process = require("process");
-// const {authenticate} = require("@google-cloud/local-auth");
-// const SCOPES = ["https://www.googleapis.com/auth/gmail.send", "https://www.googleapis.com/auth/userinfo.profile"];
-// const TOKEN_PATH = path.join(process.cwd(), "token.json");
-// const CREDENTIALS_PATH = path.join(process.cwd(), "credentials.json");
-
 // for interacting with requests
 const {onRequest} = require("firebase-functions/v2/https");
 
@@ -42,10 +32,6 @@ exports.sendEmail = onRequest( {cors: true},
       const encodedMessage = Buffer.from(message).toString("base64");
       const reallyEncodedMessage = encodedMessage.replace(/\+/g, "-").
           replace(/\//g, "_").replace(/=+$/, "");
-
-      // await receiveToken(code);
-
-      // const token = await fs.readFile(TOKEN_PATH);
       try {
         await sendMail(token, reallyEncodedMessage);
       } catch (error) {
