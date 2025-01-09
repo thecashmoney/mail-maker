@@ -1,7 +1,25 @@
-<p align = "center"> <img src="logo.png" alt="logo" /> </p>
-
-# <div id="toc" align="center">Automate your emails with templates!</div>
-## <div align="center">[Website]("https://thecashmoney.github.io/mail-maker/")</div>
+<div align = "center"> <img src="logo.png" alt="logo" /> </div>
+<div id="user-content-toc">
+  <ul align="center" style="list-style: none;">
+    <summary>
+      <h1>Automate your emails with templates!</h1>
+      <br />
+      <h2>Try it out <a href="https://thecashmoney.github.io/mail-maker/">here</a>!</h2>
+    </summary>
+  </ul>
+</div>
+<h1></h1>
+<div align="center">
+	Languages and tools used <br><br>
+	<code><img width="50" src="https://raw.githubusercontent.com/marwin1991/profile-technology-icons/refs/heads/main/icons/html.png" alt="HTML" title="HTML"/></code>
+	<code><img width="50" src="https://raw.githubusercontent.com/marwin1991/profile-technology-icons/refs/heads/main/icons/css.png" alt="CSS" title="CSS"/></code>
+	<code><img width="50" src="https://raw.githubusercontent.com/marwin1991/profile-technology-icons/refs/heads/main/icons/javascript.png" alt="JavaScript" title="JavaScript"/></code>
+	<code><img width="50" src="https://raw.githubusercontent.com/marwin1991/profile-technology-icons/refs/heads/main/icons/react.png" alt="React" title="React"/></code>
+	<code><img width="50" src="https://raw.githubusercontent.com/marwin1991/profile-technology-icons/refs/heads/main/icons/vite.png" alt="Vite" title="Vite"/></code>
+	<code><img width="50" src="https://raw.githubusercontent.com/marwin1991/profile-technology-icons/refs/heads/main/icons/firebase.png" alt="Firebase" title="Firebase"/></code>
+	<code><img width="50" src="https://raw.githubusercontent.com/marwin1991/profile-technology-icons/refs/heads/main/icons/material_ui.png" alt="Material UI" title="Material UI"/></code>
+</div>
+<br />
 
 ## A NOTE ON PRIVACY
 When you try and sign into the app, you will be warned that this app is **not verified**. This is because this app **requires** Google's API to send emails. As a result, I am requesting two scopes:
@@ -94,3 +112,4 @@ const gmail = google.gmail({version: "v1", auth: oauth2Client});
   });
 ```
 Here, I call the gmail.send function. This sends over your message through your gmail account.
+<hr/>
