@@ -1,6 +1,6 @@
 <p align = "center"> <img src="logo.png" alt="logo" /> </p>
 
-# <div align="center">A tool to automate your emails with templates!</div>
+# <div id ="user-content-toc" align="center">Automate your emails with templates!</div>
 ## <div align="center">[Website]("https://thecashmoney.github.io/mail-maker/")</div>
 
 ## A NOTE ON PRIVACY
