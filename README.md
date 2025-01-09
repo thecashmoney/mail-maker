@@ -42,7 +42,7 @@ To proceed, do the following:
 ![Screenshot3](Screenshot3.png)
 ![Screenshot4](Screenshot4.png)
 ## INSPIRATION
-This app was mostly inspired by club emails. The ones you send every week, reminding people to go to meetings. The problem was, no one wanted to write these. I scoured the school for reliable secretaries, but even they can get tired. To remove the tediousness of writing emails, I created mail-maker.
+This app was mostly inspired by club emails. The ones you send every week, reminding people to go to meetings. The problem was, no one wanted to write these. I scoured the school for reliable secretaries, but even they can get tired. To remove the tediousness of writing emails, I created mail-maker. This took a while to code because it was my first time working with React and a big javascript project in general.
 ## USAGE
 1. Add in an email, or a spreadsheet of emails (like a club attendance sheet)
 2. Write your subject
